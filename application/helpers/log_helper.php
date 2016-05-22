@@ -1,5 +1,5 @@
 <?php
- /**
+/**
  * This file handles with impressions and details in seismic logs in files 
  * for this application for later inserts in MySQL database
  *
@@ -10,7 +10,7 @@
  */
 
 
- /**
+/**
  * Function name: saveLogArray
  *
  * Description: This function takes a matrix of data, iterate over each vector,
@@ -34,7 +34,6 @@ if(!function_exists('saveLogArray')){
         fclose($handle);
     }
 }
-
 
 /**
  * Function name: saveLogLine
