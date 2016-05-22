@@ -112,4 +112,89 @@ class Seism_model extends CI_Model {
             );
         }
     }
+
+
+    /**
+     * Function name: scrapeLocal
+     *
+     * Description: Scrape RSNC website to index new seism information in our
+     *              database, this is based just in the seism ocurred in Colombia.
+     *
+     * Parameters: IT DOESN'T HAVE PARAMETERS
+     *
+     * Return: NOTHING
+     **/
+    public function scrapeLocal(){
+        require(APPPATH.'third_party/simple_html_dom.php');
+
+        $html = file_get_html(URL_RSNC_LOCAL);
+        $control = 0;
+        $data = array();
+        $detectionDate = date("Y-m-d H:i:s");
+
+        if (!empty($html)) {
+            $seism = array(
+                'push' => 'NO',
+                'fecha_deteccion' => $detectionDate
+            );
+
+            foreach ($html->find('td') as $seismHTML) {
+                $control++;
+
+                // The first 10 td are headers of the data
+                if($control > 10){
+                    // Convert the date to the format I'm handling in the db 
+                    if(($control % 10) == 3) {
+                        $utc = strtotime($seismHTML->innertext.' UTC');
+                        $str_date = date("Y-m-d H:i:s", $utc);
+                        
+                        $seism['fecha'] = $str_date;
+                    }
+
+                    if(($control % 10) == 4) 
+                        $seism['latitud'] = $seismHTML->innertext;
+
+                    if(($control % 10) == 5) 
+                        $seism['longitud'] = $seismHTML->innertext;
+
+                    if(($control % 10) == 6) 
+                        $seism['profundidad'] = $seismHTML->innertext;
+
+                    if(($control % 10) == 7) 
+                        $seism['magnitud_richter'] = $seismHTML->innertext;
+
+                    if(($control % 10) == 8) 
+                        $seism['magnitud'] = $seismHTML->innertext;
+
+                    if(($control % 10) == 9) 
+                        $seism['epicentro'] = $seismHTML->innertext;
+
+                    if(($control % 10) == 0){
+
+                        // Trying to find whether or not the seism exist in the db
+                        $this->db->where('fecha', $seism['fecha']);
+                        $n_seisms = $this->db->count_all_results('sismos'); 
+
+                        // If not exist stack it to data, else break the cycle
+                        if($n_seisms == 0)
+                            $data[] = $seism;
+                        else
+                            break;
+
+                        // Re-start the seism information
+                        $seism = array(
+                            'push' => 'NO',
+                            'fecha_deteccion' => $detectionDate
+                        );
+                    }
+                }
+            }
+
+            // Select the optimal way to insert data based on the size of the data
+            if(count($data) == 1)
+                $this->db->insert('sismos', $data[0]);
+            else if (count($data) > 1)
+                $this->db->insert_batch('sismos', $data);
+        }
+    }
 }
