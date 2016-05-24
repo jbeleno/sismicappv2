@@ -18,22 +18,22 @@ class Seism_model extends CI_Model {
     }
     
     /**
-	 * Function name: all
-	 *
-	 * Description: Retrieve information from the last 20 seisms in Colombia, 
-	 * 				it saves a log about the user that is consulting the data
-	 *				and shows a banner inviting the user to rate the app.
-	 *
-	 * Parameters:
-	 * - $idUser (optional): it's the user identification, it's optional
-	 *						 because it still has some problems in register of
-	 *						 new users due to Phonegap plugins incompatibility
-	 * - $source: it's the medium that use the user to access the data, by 
-	 *			  default it's "App"
-	 *
-	 * Return: an array in  JSON format of data that could belong to seism 
-	 *		   information or banner
-	 **/
+     * Function name: all
+     *
+     * Description: Retrieve information from the last 20 seisms in Colombia, 
+     * 				it saves a log about the user that is consulting the data
+     *				and shows a banner inviting the user to rate the app.
+     *
+     * Parameters:
+     * - $idUser (optional): it's the user identification, it's optional
+     *						 because it still has some problems in register of
+     *						 new users due to Phonegap plugins incompatibility
+     * - $source: it's the medium that use the user to access the data, by 
+     *			  default it's "App"
+     *
+     * Return: an array in  JSON format of data that could belong to seism 
+     *		   information or banner
+     **/
     public function all($idUser = NULL, $source = "App"){
     	$logs = array();
     	$data = array();
