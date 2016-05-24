@@ -72,7 +72,7 @@ class Seism_model extends CI_Model {
 
     	saveLogArray($logs, 'temp/impressions.txt', $sep = ",");
 
-    	print json_encode(
+    	return json_encode(
     		array(
     			'status' => 'OK',
     			'posts' => $data
@@ -99,14 +99,14 @@ class Seism_model extends CI_Model {
         $seism_query = $this->db->get('sismos', 1, 0);
 
         if($seism_query->num_rows() == 1){
-            print json_encode(
+            return json_encode(
                 array(
                     'status' => 'OK',
                     'seism' => $seism_query->row()
                 );
             );
         }else{
-            print json_encode(
+            return json_encode(
                 array(
                     'status' => 'BAD',
                     'msg' => '¡Ups! al parecer no tenemos datos del sismo que estás buscando'
@@ -342,6 +342,92 @@ class Seism_model extends CI_Model {
                 $this->db->insert('sismos', $data[0]);
             else if (count($data) > 1)
                 $this->db->insert_batch('sismos', $data);
+        }
+    }
+
+
+    /**
+     * Function name: spreadTheVoice
+     *
+     * Description: Scan all the seisms that had not been sent and send a push 
+     *              notifications to some users according to their settings
+     *              and publish a tweet with the new seism data.
+     *
+     * Parameters: IT DOESN'T HAVE PARAMETERS
+     *
+     * Return: NOTHING
+     **/
+    public function spreadTheVoice(){
+        $this->db->select('id,fecha,epicentro,profundidad,magnitud_richter,magnitud,latitud,longitud');
+        $this->db->where('push', 'NO');
+
+        $seism_query = $this->db->get('sismos', 5, 0);
+
+        if($seism_query->num_rows() > 0){
+            foreach ($seism_query->result() as $seism) {
+                $date = new DateTime($seism->fecha);
+
+                if($seism->magnitud_richter > 3 && $seism->magnitud > 0)
+                    $magnitude = $seism->magnitud.' Mw';
+                else
+                    $magnitude = $seism->magnitud_richter.' Ml';
+
+                $tw_msg = 'Sismo de '.$magnitude.' tuvo lugar hoy a las '.
+                          $date->format('h:i a').' con epicentro cercano a '.
+                          $seism->epicentro.' y profundidad de '.
+                          $seism->profundidad.' Km.';
+
+                writeTweet($tw_msg);
+
+                $users_query = $this->db->query(
+                    'SELECT'.
+                    'plataforma, gcm_id, rango, ('.
+                        '6371 * acos ('.
+                              'cos ( radians('.$seism->latitud.'))'.
+                              '* cos( radians( latitud ) )'.
+                              '* cos( radians( longitud ) - radians('.$seism->longitud.'))'.
+                              '+ sin ( radians('.$seism->latitud.'))'.
+                              '* sin( radians( latitud ) )'.
+                            ')'.
+                        ') AS distance'.
+                    'FROM usuarios'.
+                    'WHERE notificaciones = "true"'.
+                    'AND (magnitud >= '.$seism->magnitud.
+                         'OR '.
+                         'magnitud >= '.$seism->magnitud_richter.')'.
+                    'HAVING distance > rango'.
+                    'ORDER BY distance'
+                );
+
+                if($users_query->num_rows() > 0){
+                    $message = array(
+                        'title' => 'Sismo Detectado',
+                        'message' => 'Magnitud('.$magnitude.') '.$seism->epicentro
+                    );
+
+                    $counter = 0;
+                    $tokens = array();
+
+                    foreach ($users_query->result() as $user) {
+                        $tokens[] = $user->gcm_id;
+                        $counter++;
+
+                        if($counter == 1000){
+                            sendAndroidNotification($message, $tokens);
+                            $tokens = array();
+                            $counter = 0;
+                        }
+                    }
+
+                    sendAndroidNotification($message, $tokens);
+                    $tokens = array();
+                    $counter = 0;
+                }
+
+                $this->db->where('id', $seism->id);
+                $this->db->limit(1);
+                $this->db->update('sismos', array('push' => 'SI'));
+            }
         }
     }
 }
