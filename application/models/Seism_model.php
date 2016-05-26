@@ -2,7 +2,7 @@
 /**
  * This file handles with seismic functions that has access to the database
  * data and allows the devices performs read, update and write operations on the
- * 'sismos' table
+ * 'seism' table
  *
  * @author Juan Sebastián Beleño Díaz <jsbeleno@gmail.com>
  * @link http://www.sismicapp.com
@@ -36,22 +36,22 @@ class Seism_model extends CI_Model {
     	$logs = array();
     	$data = array();
 
-    	$this->db->select('id, magnitud, magnitud_richter, epicentro, fecha');
-    	$this->db->order_by('id', 'desc');
+    	$this->db->select('seism_id, seism_magnitude, seism_magnitude_richter, seism_epicenter, seism_date');
+    	$this->db->order_by('seism_id', 'desc');
 
-    	$seisms_query = $this->db->get('sismos', 20, 0);
+    	$seisms_query = $this->db->get('seism', 20, 0);
 
     	foreach ($seisms_query->result() as $seism) {
-    		$dateAgo = convertDateToXTimeAgo($seism->fecha);
+    		$dateAgo = convertDateToXTimeAgo($seism->seism_date);
 
-    		$seism->fecha = $dateAgo;
-    		$seism->tipo = 'sismo';
+    		$seism->seism_date = $dateAgo;
+    		$seism->seism_type = 'seism';
 
     		$data[] = $seism;
 
     		$logs[] = array(
     			($idDevice != "")? $idDevice : "NA",
-    			$seism->id,
+    			$seism->seism_id,
     			$this->input->ip_address(),
     			$source,
     			date('Y-m-d H:i:s')
@@ -81,10 +81,10 @@ class Seism_model extends CI_Model {
      *         in JSON format
      **/
     public function detail($idSeism = NULL){
-        $this->db->select('latitud, longitud, epicentro, fecha, profundidad, magnitud, magnitud_richter');
-        $this->db->where('id', $idSeism);
+        $this->db->select('seism_lat, seism_lng, seism_epicenter, seism_date, seism_depth, seism_magnitude, seism_magnitude_richter');
+        $this->db->where('seism_id', $idSeism);
 
-        $seism_query = $this->db->get('sismos', 1, 0);
+        $seism_query = $this->db->get('seism', 1, 0);
 
         if($seism_query->num_rows() == 1){
             return json_encode(
@@ -118,10 +118,10 @@ class Seism_model extends CI_Model {
     public function scrapeInternational(){
     	require(APPPATH.'third_party/simple_html_dom.php');
 
-    	$this->db->select('valor');
-		$this->db->where('nombre', 'id_sismo_internacional');
-		$seism = $this->db->get('variables_globales', 1, 0);
-		$id_intenational_seism = $seism->row()->valor + 1;
+    	$this->db->select('setting_value');
+		$this->db->where('setting_name', 'intenational_seism_id');
+		$seism = $this->db->get('setting', 1, 0);
+		$id_intenational_seism = $seism->row()->setting_value + 1;
 
 		$html = file_get_html(URL_RSNC_INTERNATIONAL);
 		$control = 0;
@@ -219,28 +219,28 @@ class Seism_model extends CI_Model {
 
 			        // Arraging the seism data
 			        $data = array(
-						'fecha' => date("Y-m-d H:i:s", $date),
-						'magnitud' => $magnitude,
-						'magnitud_richter' => $magnitude,
-						'profundidad' => $depht,
-						'epicentro' => strtoupper($str_country),
-						'latitud' => $latitude,
-						'longitud' => $longitude,
-						'push' => 'NO',
-						'fecha_deteccion' => $detection_date
+						'seism_date' => date("Y-m-d H:i:s", $date),
+						'seism_magnitude' => $magnitude,
+						'seism_magnitude_richter' => $magnitude,
+						'seism_depth' => $depht,
+						'seism_epicenter' => strtoupper($str_country),
+						'seism_lat' => $latitude,
+						'seism_lng' => $longitude,
+						'seism_notificated' => 0,
+						'seism_detection_date' => $detection_date
 					);
 
 			        // Execute the code below as a transaction
 			        $this->db->trans_start();
 
 				        // Insert the seism dat in the database
-				        $this->db->insert('sismos', $data);
+				        $this->db->insert('seism', $data);
 
 				        // Updating the seism identifier as global variable
-				        $this->db->set('valor', $id_intenational_seism);
-						$this->db->where('nombre', 'id_sismo_internacional');
+				        $this->db->set('setting_value', $id_intenational_seism);
+						$this->db->where('setting_name', 'id_international_seism');
 						$this->db->limit(1);
-						$this->db->update('variables_globales');
+						$this->db->update('setting');
 
 					$this->db->trans_complete();
 				}
@@ -269,8 +269,8 @@ class Seism_model extends CI_Model {
 
         if (!empty($html)) {
             $seism = array(
-                'push' => 'NO',
-                'fecha_deteccion' => $detectionDate
+                'seism_notificated' => 0,
+                'seism_detection_date' => $detectionDate
             );
 
             foreach ($html->find('td') as $seismHTML) {
@@ -283,32 +283,32 @@ class Seism_model extends CI_Model {
                         $utc = strtotime($seismHTML->innertext.' UTC');
                         $str_date = date("Y-m-d H:i:s", $utc);
                         
-                        $seism['fecha'] = $str_date;
+                        $seism['seism_date'] = $str_date;
                     }
 
                     if(($control % 10) == 4) 
-                        $seism['latitud'] = $seismHTML->innertext;
+                        $seism['seism_lat'] = $seismHTML->innertext;
 
                     if(($control % 10) == 5) 
-                        $seism['longitud'] = $seismHTML->innertext;
+                        $seism['seism_lng'] = $seismHTML->innertext;
 
                     if(($control % 10) == 6) 
-                        $seism['profundidad'] = $seismHTML->innertext;
+                        $seism['seism_depth'] = $seismHTML->innertext;
 
                     if(($control % 10) == 7) 
-                        $seism['magnitud_richter'] = $seismHTML->innertext;
+                        $seism['seism_magnitude_richter'] = $seismHTML->innertext;
 
                     if(($control % 10) == 8) 
-                        $seism['magnitud'] = $seismHTML->innertext;
+                        $seism['seism_magnitude'] = $seismHTML->innertext;
 
                     if(($control % 10) == 9) 
-                        $seism['epicentro'] = $seismHTML->innertext;
+                        $seism['seism_epicenter'] = $seismHTML->innertext;
 
                     if(($control % 10) == 0){
 
                         // Trying to find whether or not the seism exist in the db
-                        $this->db->where('fecha', $seism['fecha']);
-                        $n_seisms = $this->db->count_all_results('sismos'); 
+                        $this->db->where('seism_date', $seism['seism_date']);
+                        $n_seisms = $this->db->count_all_results('seism'); 
 
                         // If not exist stack it to data, else break the cycle
                         if($n_seisms == 0)
@@ -318,8 +318,8 @@ class Seism_model extends CI_Model {
 
                         // Re-start the seism information
                         $seism = array(
-                            'push' => 'NO',
-                            'fecha_deteccion' => $detectionDate
+                            'seism_notificated' => 'NO',
+                            'seism_detection_date' => $detectionDate
                         );
                     }
                 }
@@ -327,9 +327,9 @@ class Seism_model extends CI_Model {
 
             // Select the optimal way to insert data based on the size of the data
             if(count($data) == 1)
-                $this->db->insert('sismos', $data[0]);
+                $this->db->insert('seism', $data[0]);
             else if (count($data) > 1)
-                $this->db->insert_batch('sismos', $data);
+                $this->db->insert_batch('seism', $data);
         }
     }
 
@@ -346,58 +346,58 @@ class Seism_model extends CI_Model {
      * Return: NOTHING
      **/
     public function spreadTheVoice(){
-        $this->db->select('id,fecha,epicentro,profundidad,magnitud_richter,magnitud,latitud,longitud');
-        $this->db->where('push', 'NO');
+        $this->db->select('seism_id, seism_date, seism_epicenter, seism_depth, seism_magnitude_richter, seism_magnitude, seism_lat, seism_lng');
+        $this->db->where('seism_notificated', 0);
 
-        $seism_query = $this->db->get('sismos', 5, 0);
+        $seism_query = $this->db->get('seism', 5, 0);
 
         if($seism_query->num_rows() > 0){
             foreach ($seism_query->result() as $seism) {
-                $date = new DateTime($seism->fecha);
+                $date = new DateTime($seism->seism_date);
 
-                if($seism->magnitud_richter > 3 && $seism->magnitud > 0)
-                    $magnitude = $seism->magnitud.' Mw';
+                if($seism->seism_magnitude_richter > 3 && $seism->seism_magnitude > 0)
+                    $magnitude = $seism->seism_magnitude.' Mw';
                 else
-                    $magnitude = $seism->magnitud_richter.' Ml';
+                    $magnitude = $seism->seism_magnitude_richter.' Ml';
 
                 $tw_msg = 'Sismo de '.$magnitude.' tuvo lugar hoy a las '.
                           $date->format('h:i a').' con epicentro cercano a '.
-                          $seism->epicentro.' y profundidad de '.
-                          $seism->profundidad.' Km.';
+                          $seism->seism_epicenter.' y profundidad de '.
+                          $seism->seism_depth.' Km.';
 
                 writeTweet($tw_msg);
 
                 $devices_query = $this->db->query(
                     'SELECT'.
-                    'plataforma, gcm_id, rango, ('.
+                    'device_platform, device_push_id, device_range, ('.
                         '6371 * acos ('.
-                              'cos ( radians('.$seism->latitud.'))'.
-                              '* cos( radians( latitud ) )'.
-                              '* cos( radians( longitud ) - radians('.$seism->longitud.'))'.
-                              '+ sin ( radians('.$seism->latitud.'))'.
-                              '* sin( radians( latitud ) )'.
+                              'cos ( radians('.$seism->seism_lat.'))'.
+                              '* cos( radians( device_lat ) )'.
+                              '* cos( radians( device_lng ) - radians('.$seism->seism_lng.'))'.
+                              '+ sin ( radians('.$seism->seism_lat.'))'.
+                              '* sin( radians( device_lat ) )'.
                             ')'.
                         ') AS distance'.
                     'FROM device'.
-                    'WHERE notificaciones = "true"'.
-                    'AND (magnitud >= '.$seism->magnitud.
+                    'WHERE device_notifications = 1'.
+                    'AND (magnitud >= '.$seism->seism_magnitude.
                          'OR '.
-                         'magnitud >= '.$seism->magnitud_richter.')'.
-                    'HAVING distance > rango'.
+                         'magnitud >= '.$seism->seism_magnitude_richter.')'.
+                    'HAVING distance > device_range'.
                     'ORDER BY distance'
                 );
 
                 if($devices_query->num_rows() > 0){
                     $message = array(
                         'title' => 'Sismo Detectado',
-                        'message' => 'Magnitud('.$magnitude.') '.$seism->epicentro
+                        'message' => 'Magnitud('.$magnitude.') '.$seism->seism_epicenter
                     );
 
                     $counter = 0;
                     $tokens = array();
 
                     foreach ($devices_query->result() as $device) {
-                        $tokens[] = $device->token_push;
+                        $tokens[] = $device->device_push_id;
                         $counter++;
 
                         if($counter == 1000){
@@ -412,9 +412,9 @@ class Seism_model extends CI_Model {
                     $counter = 0;
                 }
 
-                $this->db->where('id', $seism->id);
+                $this->db->where('seism_id', $seism->seism_id);
                 $this->db->limit(1);
-                $this->db->update('sismos', array('push' => 'SI'));
+                $this->db->update('seism', array('seism_notificated' => 1));
             }
         }
     }
