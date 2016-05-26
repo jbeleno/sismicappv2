@@ -1,7 +1,7 @@
 <?php
 /**
  * This file handles with seismic functions that has access to the database
- * data and allows the user performs read, update and write operations on the
+ * data and allows the devices performs read, update and write operations on the
  * 'sismos' table
  *
  * @author Juan Sebastián Beleño Díaz <jsbeleno@gmail.com>
@@ -21,20 +21,18 @@ class Seism_model extends CI_Model {
      * Function name: all
      *
      * Description: Retrieve information from the last 20 seisms in Colombia, 
-     * 				it saves a log about the user that is consulting the data
-     *				and shows a banner inviting the user to rate the app.
+     * 				it saves a log about the device that is consulting the data
+     *				and shows a banner inviting the device to rate the app.
      *
      * Parameters:
-     * - $idUser (optional): it's the user identification, it's optional
-     *						 because it still has some problems in register of
-     *						 new users due to Phonegap plugins incompatibility
-     * - $source: it's the medium that use the user to access the data, by 
+     * - $idDevice (optional): it's the device identifier
+     * - $source: it's the medium that use the device to access the data, by 
      *			  default it's "App"
      *
      * Return: an array in  JSON format of data that could belong to seism 
      *		   information or banner
      **/
-    public function all($idUser = NULL, $source = "App"){
+    public function all($idDevice = NULL, $source = "App"){
     	$logs = array();
     	$data = array();
 
@@ -52,21 +50,11 @@ class Seism_model extends CI_Model {
     		$data[] = $seism;
 
     		$logs[] = array(
-    			($idUser != "")? $idUser : "NA",
+    			($idDevice != "")? $idDevice : "NA",
     			$seism->id,
     			$this->input->ip_address(),
     			$source,
     			date('Y-m-d H:i:s')
-    		);
-    	}
-
-    	// This threshold is about the first user who registered the 
-    	// app version that allows banners without exploding
-    	$user_threshold_new_version = 745;
-    	if($idUser > $user_threshold_new_version){
-    		$data[] = array(
-    			'tipo' => 'banner',
-    			'banner' => $this->load->view('banners/ratingapp', NULL, TRUE)
     		);
     	}
 
@@ -350,7 +338,7 @@ class Seism_model extends CI_Model {
      * Function name: spreadTheVoice
      *
      * Description: Scan all the seisms that had not been sent and send a push 
-     *              notifications to some users according to their settings
+     *              notifications to some devices according to their settings
      *              and publish a tweet with the new seism data.
      *
      * Parameters: IT DOESN'T HAVE PARAMETERS
@@ -379,7 +367,7 @@ class Seism_model extends CI_Model {
 
                 writeTweet($tw_msg);
 
-                $users_query = $this->db->query(
+                $devices_query = $this->db->query(
                     'SELECT'.
                     'plataforma, gcm_id, rango, ('.
                         '6371 * acos ('.
@@ -390,7 +378,7 @@ class Seism_model extends CI_Model {
                               '* sin( radians( latitud ) )'.
                             ')'.
                         ') AS distance'.
-                    'FROM usuarios'.
+                    'FROM device'.
                     'WHERE notificaciones = "true"'.
                     'AND (magnitud >= '.$seism->magnitud.
                          'OR '.
@@ -399,7 +387,7 @@ class Seism_model extends CI_Model {
                     'ORDER BY distance'
                 );
 
-                if($users_query->num_rows() > 0){
+                if($devices_query->num_rows() > 0){
                     $message = array(
                         'title' => 'Sismo Detectado',
                         'message' => 'Magnitud('.$magnitude.') '.$seism->epicentro
@@ -408,8 +396,8 @@ class Seism_model extends CI_Model {
                     $counter = 0;
                     $tokens = array();
 
-                    foreach ($users_query->result() as $user) {
-                        $tokens[] = $user->gcm_id;
+                    foreach ($devices_query->result() as $device) {
+                        $tokens[] = $device->token_push;
                         $counter++;
 
                         if($counter == 1000){
