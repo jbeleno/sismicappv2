@@ -22,7 +22,7 @@
  * - $tokens: it's an array of GCM ids stored in our database, it could be
  *            a simple GCM id inside an array
  *
- * Return: NULL
+ * Return: An array with the notification status of each token
  **/
 if(!function_exists('sendAndroidNotification'))
 {
@@ -50,5 +50,7 @@ if(!function_exists('sendAndroidNotification'))
         curl_setopt( $ch,CURLOPT_POSTFIELDS, json_encode( $fields ) );
         $result = curl_exec($ch );
         curl_close( $ch );
+
+        return $result;
     }
 }

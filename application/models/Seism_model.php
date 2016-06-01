@@ -25,9 +25,9 @@ class Seism_model extends CI_Model {
      *				and shows a banner inviting the device to rate the app.
      *
      * Parameters:
-     * - $idDevice (optional): it's the device identifier
-     * - $source: it's the medium that use the device to access the data, by 
-     *			  default it's "App"
+     * - $idDevice <Integer> (optional): it's the device identifier
+     * - $source <String>: it's the medium that use the device to access the data,  
+     *			           by default it's "App"
      *
      * Return: an array in  JSON format of data that could belong to seism 
      *		   information or banner
@@ -75,7 +75,7 @@ class Seism_model extends CI_Model {
      *              parameter.
      *
      * Parameters:
-     * - $idSeism: it's the seism identificator in the database
+     * - $idSeism <Integer>: it's the seism identificator in the database
      *
      * Return: an array in JSON format of the seism selected or an error in
      *         in JSON format
@@ -407,6 +407,8 @@ class Seism_model extends CI_Model {
                         }
                     }
 
+                    // TO DO: Receive the notification result and verify if the
+                    // 		  notification was sent to update the device status 
                     sendAndroidNotification($message, $tokens);
                     $tokens = array();
                     $counter = 0;

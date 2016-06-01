@@ -22,12 +22,12 @@ class Device_model extends CI_Model {
      *				device token to keep it secret.
      *
      * Parameters:
-     * - $push_id: it's the token used by Android/iOS to send push notifications
-     * - $latitude: it's the latitude coordinate of the device
-     * - $longitude: it's the longitude coordinate of the device
-     * - $model: it's the device model
-     * - $platform: it's the device platform iOS or Android
-     * - $version: it's the SO version of the software
+     * - $push_id <String>: it's the token used by Android/iOS to send push notifications
+     * - $latitude <Float>: it's the latitude coordinate of the device
+     * - $longitude <Float>: it's the longitude coordinate of the device
+     * - $model <String>: it's the device model
+     * - $platform <String>: it's the device platform iOS or Android
+     * - $version <String>: it's the SO version of the software
      *
      * Return: an array in JSON format with the request status and the device
      * 		   identifier
@@ -49,7 +49,8 @@ class Device_model extends CI_Model {
 			'device_range' => 1800,
 			'device_notifications' => 1,
 			'device_last_ip' => $this->input->ip_address(),
-			'device_last_date_login' => $date
+			'device_last_date_login' => $date,
+            'device_status' => 1
 		);
 
 		$this->db->insert('device', $data);
@@ -60,6 +61,39 @@ class Device_model extends CI_Model {
 				'ID' => $data['token']
 			)
 		);
+    }
+
+    /**
+     * Function name: new
+     *
+     * Description: Update the device settings to receive notifications under
+     *              some conditions
+     *
+     * Parameters:
+     * - $device_token <String>: it's the user token assigned for sismicapp as identifier
+     * - $magnitude <Float>: it's bottom limit of the seism magnitude in moment magnitude  
+     *                       scale to send notifications
+     * - $range <Integer>: it's the maximum distance in kilometers to receive notifications
+     * - $notifications <Boolean>: it's the value to know if the device is allowed to 
+     *                             receive notifications
+     *
+     * Return: an array in JSON format with the request status
+     **/
+    public function updateSettings($device_token, $magnitude, $range, $notifications){
+        $date = date("Y-m-d H:i:s");
+
+        $data = array(
+            'device_magnitude' => $magnitude,
+            'device_range' => $range,
+            'device_notifications' => $notifications
+        );
+
+        // Update device settings
+        $this->db->where('device_token', $device_token);
+        $this->db->limit(1);
+        $this->db->update('device', $data_device);
+
+        return json_encode( array( "status"=>"OK" ) );
     }
 
 }
