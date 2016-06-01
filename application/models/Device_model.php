@@ -14,6 +14,41 @@ class Device_model extends CI_Model {
         parent::__construct();
     }
 
+    /**
+     * Function name: loadSettings
+     *
+     * Description: Retrieve the device settings according to the device token
+     *
+     * Parameters:
+     * - $device_token <String>: it's the user token assigned for sismicapp as identifier
+     *
+     * Return: an array in JSON format with the request status and settings data
+     **/
+    public function loadSettings($device_token){
+        $this->db->select('magnitude, range, device_notifications');
+        $this->db->where('device_token', $device_token);
+        $settings_query = $this->db->get('device', 1, 0);
+
+        if($settings_query->num_rows() == 1){
+            $settings = $settings_query->row();
+
+            return json_encode( 
+                array( 
+                    "status" => "OK",
+                    "settings" => $settings
+                ) 
+            );
+
+        }
+
+        return json_encode( 
+            array( 
+                "status" => "BAD",
+                "msg" => " ¡Ups! hay problemas cargando las configuraciones"
+            ) 
+        );
+    }
+
 
     /**
      * Function name: new
@@ -64,7 +99,7 @@ class Device_model extends CI_Model {
     }
 
     /**
-     * Function name: new
+     * Function name: updateSettings
      *
      * Description: Update the device settings to receive notifications under
      *              some conditions
