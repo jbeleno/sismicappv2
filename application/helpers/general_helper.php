@@ -18,11 +18,11 @@
  *				http://stackoverflow.com/a/10054282 using the Vincenty formula.
  *
  * Parameters:
- * - $latitudeFrom: it's the latitude parameter of the starting point
- * - $longitudeFrom: it's the longitude parameter of the starting point
- * - $latitudeTo: it's the latitude parameter of the final point
- * - $longitudeTo: it's the longitude parameter of the final point
- * - $earthRadius (optional): it's the earth "radius"
+ * - $latitudeFrom <Float>: it's the latitude parameter of the starting point
+ * - $longitudeFrom <Float>: it's the longitude parameter of the starting point
+ * - $latitudeTo <Float>: it's the latitude parameter of the final point
+ * - $longitudeTo <Float>: it's the longitude parameter of the final point
+ * - $earthRadius <Integer> (optional): it's the earth "radius"
  *
  * Return: The distance in kilometers between the two given points
  **/
@@ -52,7 +52,7 @@ if(!function_exists('calculateDistance')){
  *				ago, but this String is in spanish.
  *
  * Parameters:
- * - $str_date: a date in String format
+ * - $str_date <String>: a date in String format
  *
  * Return: The date in a format of X (unit time) ago, where "unit time" could
  *		   take values of seconds, minutes, months and years

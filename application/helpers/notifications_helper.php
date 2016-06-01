@@ -17,9 +17,9 @@
  *              the message using Google Cloud Messaging.
  *
  * Parameters:
- * - $message: it's an array of data of a message, it frecuently has a 
+ * - $message <String>: it's an array of data of a message, it frecuently has a 
  *             message and a title as attributes
- * - $tokens: it's an array of GCM ids stored in our database, it could be
+ * - $tokens <Array>: it's an array of GCM ids stored in our database, it could be
  *            a simple GCM id inside an array
  *
  * Return: An array with the notification status of each token

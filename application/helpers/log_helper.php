@@ -18,9 +18,9 @@
  *              as a new line of the specified file.
  *
  * Parameters:
- * - $data: it's an array of data
- * - $fileName: it's the file name where we want to store the information
- * - $sep (optional): it's an option to select which character we want to 
+ * - $data <Array>: it's an array of data
+ * - $fileName <String>: it's the file name where we want to store the information
+ * - $sep <String> (optional): it's an option to select which character we want to 
  *                    separate our data
  *
  * Return: NULL
@@ -42,9 +42,9 @@ if(!function_exists('saveLogArray')){
  *              and store it in a new line of the specified file.
  *
  * Parameters:
- * - $data: it's an array of data
- * - $fileName: it's the file name where we want to store the information
- * - $sep (optional): it's an option to select which character we want to 
+ * - $data <Array>: it's an array of data
+ * - $fileName <String>: it's the file name where we want to store the information
+ * - $sep <String> (optional): it's an option to select which character we want to 
  *                    separate our data
  *
  * Return: NULL

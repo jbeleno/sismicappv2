@@ -17,7 +17,7 @@
  *				timeline as status.
  *
  * Parameters:
- * - $msg: it's a String with a message to write as a tweet in @sismicapp
+ * - $msg <String>: it's a String with a message to write as a tweet in @sismicapp
  *
  * Return: NULL
  **/
