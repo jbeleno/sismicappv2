@@ -93,7 +93,7 @@ class Device_model extends CI_Model {
 		return json_encode(
 			array(
 				"status"=>"OK",
-				'ID' => $data['token']
+				'device_token' => $data['device_token']
 			)
 		);
     }

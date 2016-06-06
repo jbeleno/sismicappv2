@@ -25,14 +25,18 @@ class Seism_model extends CI_Model {
      *				and shows a banner inviting the device to rate the app.
      *
      * Parameters:
-     * - $idDevice <Integer> (optional): it's the device identifier
+     * - $device_token <String> (Optional): it's the user token assigned for
+     *                                      sismicapp as identifier
      * - $source <String>: it's the medium that use the device to access the data,  
      *			           by default it's "App"
      *
      * Return: an array in  JSON format of data that could belong to seism 
      *		   information or banner
      **/
-    public function all($idDevice = NULL, $source = "App"){
+    public function all($device_token = NULL, $source = "App"){
+        $this->load->helper('general');
+        $this->load->helper('log');
+
     	$logs = array();
     	$data = array();
 
@@ -40,6 +44,16 @@ class Seism_model extends CI_Model {
     	$this->db->order_by('seism_id', 'desc');
 
     	$seisms_query = $this->db->get('seism', 20, 0);
+
+        // Getting the device identifier
+        $this->db->select('device_id');
+        $this->db->where('device_token', $device_token);
+        $device_query = $this->db->get('device', 1, 0);
+        $idDevice = NULL;
+
+        if($devices_query->num_rows() == 1){
+            $idDevice = $device_query->row()->device_id;
+        }
 
     	foreach ($seisms_query->result() as $seism) {
     		$dateAgo = convertDateToXTimeAgo($seism->seism_date);
@@ -58,6 +72,7 @@ class Seism_model extends CI_Model {
     		);
     	}
 
+        // TO DO: Logistic of saving in database logs
     	saveLogArray($logs, 'temp/impressions.txt', $sep = ",");
 
     	return json_encode(
@@ -75,18 +90,33 @@ class Seism_model extends CI_Model {
      *              parameter.
      *
      * Parameters:
+     * - $device_token <String> (Optional): it's the user token assigned for
+     *                                      sismicapp as identifier
      * - $idSeism <Integer>: it's the seism identificator in the database
      *
      * Return: an array in JSON format of the seism selected or an error in
      *         in JSON format
      **/
-    public function detail($idSeism = NULL){
+    public function detail($device_token = NULL, $idSeism = NULL){
         $this->db->select('seism_lat, seism_lng, seism_epicenter, seism_date, seism_depth, seism_magnitude, seism_magnitude_richter');
         $this->db->where('seism_id', $idSeism);
 
         $seism_query = $this->db->get('seism', 1, 0);
 
         if($seism_query->num_rows() == 1){
+
+            // Getting the device identifier
+            $this->db->select('device_id');
+            $this->db->where('device_token', $device_token);
+            $device_query = $this->db->get('device', 1, 0);
+            $idDevice = NULL;
+
+            if($devices_query->num_rows() == 1){
+                $idDevice = $device_query->row()->device_id;
+            }
+            
+            // TO DO: Logistic of saving in database logs
+
             return json_encode(
                 array(
                     'status' => 'OK',
@@ -346,6 +376,9 @@ class Seism_model extends CI_Model {
      * Return: NOTHING
      **/
     public function spreadTheVoice(){
+        $this->load->helper('social');
+        $this->load->helper('notifications');
+
         $this->db->select('seism_id, seism_date, seism_epicenter, seism_depth, seism_magnitude_richter, seism_magnitude, seism_lat, seism_lng');
         $this->db->where('seism_notificated', 0);
 
