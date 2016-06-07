@@ -22,7 +22,7 @@ class Device_model extends CI_Model {
      * Parameters:
      * - $device_token <String>: it's the user token assigned for sismicapp as identifier
      *
-     * Return: an array in JSON format with the request status and settings data
+     * Return: an array with the request status and settings data
      **/
     public function loadSettings($device_token){
         $this->db->select('magnitude, range, device_notifications');
@@ -32,21 +32,17 @@ class Device_model extends CI_Model {
         if($settings_query->num_rows() == 1){
             $settings = $settings_query->row();
 
-            return json_encode( 
-                array( 
-                    "status" => "OK",
-                    "settings" => $settings
-                ) 
-            );
+            return  array( 
+	                    "status" => "OK",
+	                    "settings" => $settings
+	                );
 
         }
 
-        return json_encode( 
-            array( 
-                "status" => "BAD",
-                "msg" => " ¡Ups! hay problemas cargando las configuraciones"
-            ) 
-        );
+        return  array( 
+                    "status" => "BAD",
+                    "msg" => " ¡Ups! hay problemas cargando las configuraciones"
+                );
     }
 
 
@@ -64,7 +60,7 @@ class Device_model extends CI_Model {
      * - $platform <String>: it's the device platform iOS or Android
      * - $version <String>: it's the SO version of the software
      *
-     * Return: an array in JSON format with the request status and the device
+     * Return: an array with the request status and the device
      * 		   identifier
      **/
     public function new($push_id, $latitude, $longitude, 
@@ -90,12 +86,10 @@ class Device_model extends CI_Model {
 
 		$this->db->insert('device', $data);
 
-		return json_encode(
-			array(
-				"status"=>"OK",
-				'device_token' => $data['device_token']
-			)
-		);
+		return  array(
+					"status"=>"OK",
+					'device_token' => $data['device_token']
+				);
     }
 
     /**
@@ -112,7 +106,7 @@ class Device_model extends CI_Model {
      * - $notifications <Boolean>: it's the value to know if the device is allowed to 
      *                             receive notifications
      *
-     * Return: an array in JSON format with the request status
+     * Return: an array with the request status
      **/
     public function updateSettings($device_token, $magnitude, $range, $notifications){
         $date = date("Y-m-d H:i:s");
@@ -128,7 +122,7 @@ class Device_model extends CI_Model {
         $this->db->limit(1);
         $this->db->update('device', $data_device);
 
-        return json_encode( array( "status"=>"OK" ) );
+        return array( "status"=>"OK" );
     }
 
 }

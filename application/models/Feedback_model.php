@@ -27,7 +27,7 @@ class Feedback_model extends CI_Model {
      * - $longitude <Float>: it's the longitude coordinate of the device
      * - $msg <String>: it's a message content about the feedback
      *
-     * Return: an array in JSON format with the request status
+     * Return: an array with the request status
      **/
     public function new($device_token, $latitude, $longitude, $msg){
     	$date = date("Y-m-d H:i:s");
@@ -52,7 +52,7 @@ class Feedback_model extends CI_Model {
 
 		$this->db->insert('feedback', $data);
 
-		return json_encode( array( "status"=>"OK" ) );
+		return array( "status"=>"OK" );
     }
 
 }

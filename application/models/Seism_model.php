@@ -30,8 +30,7 @@ class Seism_model extends CI_Model {
      * - $source <String>: it's the medium that use the device to access the data,  
      *			           by default it's "App"
      *
-     * Return: an array in  JSON format of data that could belong to seism 
-     *		   information or banner
+     * Return: an array of data that could belong to seism information or banner
      **/
     public function all($device_token = NULL, $source = "App"){
         $this->load->helper('general');
@@ -75,12 +74,10 @@ class Seism_model extends CI_Model {
         // TO DO: Logistic of saving in database logs
     	saveLogArray($logs, 'temp/impressions.txt', $sep = ",");
 
-    	return json_encode(
-    		array(
-    			'status' => 'OK',
-    			'posts' => $data
-    		);
-    	);
+    	return  array(
+        			'status' => 'OK',
+        			'posts' => $data
+        		);
     }
 
     /**
@@ -94,8 +91,7 @@ class Seism_model extends CI_Model {
      *                                      sismicapp as identifier
      * - $idSeism <Integer>: it's the seism identificator in the database
      *
-     * Return: an array in JSON format of the seism selected or an error in
-     *         in JSON format
+     * Return: an array of the seism selected or an error 
      **/
     public function detail($device_token = NULL, $idSeism = NULL){
         $this->db->select('seism_lat, seism_lng, seism_epicenter, seism_date, seism_depth, seism_magnitude, seism_magnitude_richter');
@@ -117,18 +113,15 @@ class Seism_model extends CI_Model {
             
             // TO DO: Logistic of saving in database logs
 
-            return json_encode(
-                array(
-                    'status' => 'OK',
-                    'seism' => $seism_query->row()
-                );
-            );
+            return  array(
+                        'status' => 'OK',
+                        'seism' => $seism_query->row()
+                    );
         }else{
-            return json_encode(
-                array(
-                    'status' => 'BAD',
-                    'msg' => '¡Ups! al parecer no tenemos datos del sismo que estás buscando'
-                );
+            return  array(
+                        'status' => 'BAD',
+                        'msg' => '¡Ups! al parecer no tenemos datos del sismo que estás buscando'
+                    );
             );
         }
     }

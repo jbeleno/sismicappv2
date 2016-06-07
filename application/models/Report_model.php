@@ -33,7 +33,7 @@ class Report_model extends CI_Model {
      * - $activity <Integer>: it's the user activity 
      *						  (Not movement: 0, movement: 1)
      *
-     * Return: an array in JSON format with the request status
+     * Return: an array with the request status
      **/
     public function new($seism_id, $device_token, $latitude, 
     					$longitude, $intensity, $place, $activity){
@@ -62,7 +62,7 @@ class Report_model extends CI_Model {
 
 		$this->db->insert('report', $data);
 
-		return json_encode( array( "status"=>"OK" ) );
+		return array( "status"=>"OK" );
     }
 }
 

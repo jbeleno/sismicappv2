@@ -26,7 +26,7 @@ class Session_model extends CI_Model {
      * - $latitude <Float>: it's the latitude coordinate of the device
      * - $longitude <Float>: it's the longitude coordinate of the device
      *
-     * Return: an array in JSON format with the request status
+     * Return: an array with the request status
      **/
     public function new($device_token, $latitude, $longitude){
 
@@ -61,7 +61,7 @@ class Session_model extends CI_Model {
         $this->db->limit(1);
         $this->db->update('device', $data_device);
 
-        return json_encode( array( "status"=>"OK" ) );
+        return array( "status"=>"OK" );
     }
 
 }
