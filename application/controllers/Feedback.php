@@ -18,14 +18,16 @@ class Feedback extends CI_Controller {
 		$this->load->model('feedback_model');
 	}
 
-	public function new()
+	public function add()
 	{
 		$device_token = $this->input->post('device_token');
 		$latitude = $this->input->post('latitude');
 		$longitude = $this->input->post('longitude');
 		$msg = $this->input->post('msg');
 
-		print json_encode($this->feedback_model->new($device_token, $latitude, $longitude, $msg));
+		$this->output
+	         ->set_content_type('application/json')
+	         ->set_output(json_encode($this->feedback_model->add($device_token, $latitude, $longitude, $msg)));
 	}
 
 }

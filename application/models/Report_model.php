@@ -17,7 +17,7 @@ class Report_model extends CI_Model {
     }
 
 	/**
-     * Function name: new
+     * Function name: add
      *
      * Description: Insert a new report.
      *
@@ -35,7 +35,7 @@ class Report_model extends CI_Model {
      *
      * Return: an array with the request status
      **/
-    public function new($seism_id, $device_token, $latitude, 
+    public function add($seism_id, $device_token, $latitude, 
     					$longitude, $intensity, $place, $activity){
     	$date = date("Y-m-d H:i:s");
 

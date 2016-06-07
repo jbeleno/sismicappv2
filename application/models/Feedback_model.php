@@ -17,7 +17,7 @@ class Feedback_model extends CI_Model {
     }
 
     /**
-     * Function name: new
+     * Function name: add
      *
      * Description: Insert new feedback information.
      *
@@ -29,7 +29,7 @@ class Feedback_model extends CI_Model {
      *
      * Return: an array with the request status
      **/
-    public function new($device_token, $latitude, $longitude, $msg){
+    public function add($device_token, $latitude, $longitude, $msg){
     	$date = date("Y-m-d H:i:s");
 
     	$this->db->select('device_id');

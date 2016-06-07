@@ -18,14 +18,7 @@ class Device extends CI_Controller {
 		$this->load->model('device_model');
 	}
 
-	public function load_settings()
-	{
-		$device_token = $this->input->post('device_token');
-
-		print json_encode($this->device_model->loadSettings($device_token));
-	}
-
-	public function new()
+	public function add()
 	{
 		$push_id = $this->input->post('push_id');
 		$latitude = $this->input->post('latitude');
@@ -34,7 +27,18 @@ class Device extends CI_Controller {
 		$platform = $this->input->post('platform');
 		$version = $this->input->post('version');
 
-		print json_encode($this->device_model->new($push_id, $latitude, $longitude, $model, $platform, $version));
+		$this->output
+	         ->set_content_type('application/json')
+	         ->set_output(json_encode($this->device_model->new($push_id, $latitude, $longitude, $model, $platform, $version)));
+	}
+
+	public function load_settings()
+	{
+		$device_token = $this->input->post('device_token');
+
+		$this->output
+	         ->set_content_type('application/json')
+	         ->set_output(json_encode($this->device_model->loadSettings($device_token)));
 	}
 
 	public function update_settings()
@@ -44,7 +48,9 @@ class Device extends CI_Controller {
 		$range = $this->input->post('range');
 		$notifications = $this->input->post('notifications');
 
-		print json_encode($this->device_model->updateSettings($device_token, $magnitude, $range, $notifications));
+		$this->output
+	         ->set_content_type('application/json')
+	         ->set_output(json_encode($this->device_model->updateSettings($device_token, $magnitude, $range, $notifications)));
 	}
 
 }

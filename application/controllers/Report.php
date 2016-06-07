@@ -18,7 +18,7 @@ class Report extends CI_Controller {
 		$this->load->model('report_model');
 	}
 
-	public function new()
+	public function add()
 	{
 		$seism_id = $this->input->post('seism_id');
 		$device_token = $this->input->post('device_token');
@@ -28,7 +28,9 @@ class Report extends CI_Controller {
 		$place = $this->input->post('place');
 		$activity = $this->input->post('activity');
 
-		print json_encode($this->report_model->new($seism_id, $device_token, $latitude, $longitude, $intensity, $place, $activity));
+		$this->output
+	         ->set_content_type('application/json')
+	         ->set_output(json_encode($this->report_model->add($seism_id, $device_token, $latitude, $longitude, $intensity, $place, $activity)));
 	}
 
 }

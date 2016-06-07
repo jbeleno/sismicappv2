@@ -16,7 +16,7 @@ class Session_model extends CI_Model {
     }
 
 	/**
-     * Function name: new
+     * Function name: add
      *
      * Description: Update the device location, ip, date and create a new session
      *              record to track the device usage.
@@ -28,7 +28,7 @@ class Session_model extends CI_Model {
      *
      * Return: an array with the request status
      **/
-    public function new($device_token, $latitude, $longitude){
+    public function add($device_token, $latitude, $longitude){
 
         $date = date("Y-m-d H:i:s");
 

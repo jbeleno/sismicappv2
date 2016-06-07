@@ -23,7 +23,9 @@ class Seism extends CI_Controller {
 		$device_token = $this->input->post('device_token');
 		$source = $this->input->post('source');
 
-		print json_encode($this->seism_model->all($device_token, $source));
+		$this->output
+	         ->set_content_type('application/json')
+	         ->set_output(json_encode($this->seism_model->all($device_token, $source)));
 	}
 
 	public function detail()
@@ -31,7 +33,9 @@ class Seism extends CI_Controller {
 		$device_token = $this->input->post('device_token');
 		$seism_id = $this->input->post('seism_id');
 
-		print json_encode($this->seism_model->detail($device_token, $seism_id));
+		$this->output
+	         ->set_content_type('application/json')
+	         ->set_output(json_encode($this->seism_model->detail($device_token, $seism_id)));
 	}
 
 	public function scrape_international()
@@ -41,16 +45,18 @@ class Seism extends CI_Controller {
 		if($ip == ELASTIC_IP){
 			$this->seism_model->scrapeInternational();
 
-			print json_encode(array('status' => 'OK'));
+			$this->output
+	         	 ->set_content_type('application/json')
+	         	 ->set_output(json_encode(array('status' => 'OK')));
 		}else{
-			print(
-				json_encode(
-					array(
-						'status' => 'BAD',
-						'msg' => 'No tienes permisos para acceder a este servicio.'
-					)
-				)
-			);
+			$this->output
+	         	 ->set_content_type('application/json')
+	         	 ->set_output(json_encode(
+								array(
+									'status' => 'BAD',
+									'msg' => 'No tienes permisos para acceder a este servicio.'
+								)
+							));
 		}
 	}
 
@@ -61,16 +67,18 @@ class Seism extends CI_Controller {
 		if($ip == ELASTIC_IP){
 			$this->seism_model->scrapeLocal();
 
-			print json_encode(array('status' => 'OK'));
+			$this->output
+	         	 ->set_content_type('application/json')
+	         	 ->set_output(json_encode(array('status' => 'OK')));
 		}else{
-			print(
-				json_encode(
-					array(
-						'status' => 'BAD',
-						'msg' => 'No tienes permisos para acceder a este servicio.'
-					)
-				)
-			);
+			$this->output
+	         	 ->set_content_type('application/json')
+	         	 ->set_output(json_encode(
+								array(
+									'status' => 'BAD',
+									'msg' => 'No tienes permisos para acceder a este servicio.'
+								)
+							));
 		}
 	}
 
@@ -81,16 +89,18 @@ class Seism extends CI_Controller {
 		if($ip == ELASTIC_IP){
 			$this->seism_model->spreadTheVoice();
 
-			print json_encode(array('status' => 'OK'));
+			$this->output
+	         	 ->set_content_type('application/json')
+	         	 ->set_output(json_encode(array('status' => 'OK')));
 		}else{
-			print(
-				json_encode(
-					array(
-						'status' => 'BAD',
-						'msg' => 'No tienes permisos para acceder a este servicio.'
-					)
-				)
-			);
+			$this->output
+	         	 ->set_content_type('application/json')
+	         	 ->set_output(json_encode(
+								array(
+									'status' => 'BAD',
+									'msg' => 'No tienes permisos para acceder a este servicio.'
+								)
+							));
 		}
 	}
 
