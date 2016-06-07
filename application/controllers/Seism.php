@@ -39,7 +39,9 @@ class Seism extends CI_Controller {
 		$ip = $this->input->ip_address();
 
 		if($ip == ELASTIC_IP){
-			print json_encode($this->seism_model->scrapeInternational());
+			$this->seism_model->scrapeInternational();
+
+			print json_encode(array('status' => 'OK'));
 		}else{
 			print(
 				json_encode(
@@ -57,7 +59,9 @@ class Seism extends CI_Controller {
 		$ip = $this->input->ip_address();
 
 		if($ip == ELASTIC_IP){
-			print json_encode($this->seism_model->scrapeLocal());
+			$this->seism_model->scrapeLocal();
+
+			print json_encode(array('status' => 'OK'));
 		}else{
 			print(
 				json_encode(
@@ -75,7 +79,9 @@ class Seism extends CI_Controller {
 		$ip = $this->input->ip_address();
 
 		if($ip == ELASTIC_IP){
-			print json_encode($this->seism_model->spreadTheVoice());
+			$this->seism_model->spreadTheVoice();
+
+			print json_encode(array('status' => 'OK'));
 		}else{
 			print(
 				json_encode(
