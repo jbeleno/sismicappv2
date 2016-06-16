@@ -29,7 +29,7 @@ class Device extends CI_Controller {
 
 		$this->output
 	         ->set_content_type('application/json')
-	         ->set_output(json_encode($this->device_model->new($push_id, $latitude, $longitude, $model, $platform, $version)));
+	         ->set_output(json_encode($this->device_model->add($push_id, $latitude, $longitude, $model, $platform, $version)));
 	}
 
 	public function load_settings()

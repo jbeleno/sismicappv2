@@ -249,6 +249,7 @@ class Seism_model extends CI_Model {
 						'seism_epicenter' => strtoupper($str_country),
 						'seism_lat' => $latitude,
 						'seism_lng' => $longitude,
+						'seism_country' => 'Colombia',
 						'seism_notificated' => 0,
 						'seism_detection_date' => $detection_date
 					);
@@ -342,6 +343,7 @@ class Seism_model extends CI_Model {
                         // Re-start the seism information
                         $seism = array(
                             'seism_notificated' => 'NO',
+                            'seism_country' => 'Colombia',
                             'seism_detection_date' => $detectionDate
                         );
                     }

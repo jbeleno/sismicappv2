@@ -35,10 +35,23 @@ class Device_model extends CI_Model {
     public function add($push_id, $latitude, $longitude, 
                         $model, $platform, $version){
         $date = date("Y-m-d H:i:s");
+        $ip = $this->input->ip_address();
+
+        $this->db->where('device_push_id', $push_id);
+        $n_devices = $this->db->count_all_results('my_table');
+
+        // If there's more than a device with the same push_id, then
+        // the devices with are updated to not receive notifications
+        // and a new device is created with different session token
+        if($n_devices > 0){
+            $this->db->set('device_notifications', 0);
+            $this->db->where('device_push_id', $push_id);
+            $this->db->update('device');
+        }
 
         $data = array(
             'device_push_id' => $push_id,
-            'device_token' => sha1($date.$push_id),
+            'device_token' => md5(microtime().$ip), // Char(32) format
             'device_lat'=> $latitude,
             'device_lng' => $longitude,
             'device_model' => $model,
@@ -48,7 +61,7 @@ class Device_model extends CI_Model {
             'device_magnitude' => 4.0,
             'device_range' => 1800,
             'device_notifications' => 1,
-            'device_last_ip' => $this->input->ip_address(),
+            'device_last_ip' => $ip,
             'device_last_date_login' => $date,
             'device_status' => 1
         );
