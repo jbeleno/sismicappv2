@@ -37,32 +37,43 @@ class Report_model extends CI_Model {
      **/
     public function add($seism_id, $device_token, $latitude, 
     					$longitude, $intensity, $place, $activity){
-    	$date = date("Y-m-d H:i:s");
 
-    	$this->db->select('device_id');
-    	$this->db->where('device_token', $device_token);
-    	$device_query = $this->db->get('device', 1, 0);
-    	$device_id = NULL;
+        if(ctype_alnum($seism_id)){
+        	$date = date("Y-m-d H:i:s");
 
-    	if($device_query.num_rows() == 1){
-    		$device_id = $device_query->row()->device_id;
-    	}
+        	$this->db->select('HEX(device_id) AS device_id');
+        	$this->db->where('device_token', $device_token);
+        	$device_query = $this->db->get('device', 1, 0);
+        	$device_id = NULL;
 
-    	$data = array(
-			'report_id_push' => $seism_id,
-			'report_id_device' => $device_id,
-			'report_lat'=> $latitude,
-			'report_lng' => $longitude,
-			'report_intensity' => $intensity,
-			'report_place' => $place,
-			'report_activity' => $activity,
-            'report_ip' => $this->input->ip_address(),
-			'report_date' => $date
-		);
+        	if($device_query.num_rows() == 1){
+        		$device_id = $device_query->row()->device_id;
+        	}
 
-		$this->db->insert('report', $data);
+        	$data = array(
+    			'report_lat'=> $latitude,
+    			'report_lng' => $longitude,
+    			'report_intensity' => $intensity,
+    			'report_place' => $place,
+    			'report_activity' => $activity,
+                'report_ip' => $this->input->ip_address(),
+    			'report_date' => $date
+    		);
 
-		return array( "status"=>"OK" );
+            // Handling the UUID as identifier
+            $this->db->set('report_id', "unhex(replace(uuid(),'-',''))", FALSE);
+            $this->db->set('report_id_seism', "UNHEX(".$seism_id.")", FALSE);
+            $this->db->set('report_id_device', "UNHEX(".$device_id.")", FALSE);
+
+    		$this->db->insert('report', $data);
+
+    		return array( "status"=>"OK" );
+        }else{
+            return array(
+                "status" => 'BAD',
+                'msg' => '¡Ups! ocurrió un problema al enviar tu reporte, por favor intenta más tarde.'
+            );
+        }
     }
 }
 

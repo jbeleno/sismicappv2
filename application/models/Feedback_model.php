@@ -42,13 +42,16 @@ class Feedback_model extends CI_Model {
     	}
 
     	$data = array(
-			'feedback_id_device' => $device_id,
 			'feedback_lat'=> $latitude,
 			'feedback_lng' => $longitude,
 			'feedback_msg' => $intensity,
 			'feedback_ip' => $this->input->ip_address(),
 			'feedback_date' => $date
 		);
+
+        // Handling the UUID as identifier
+        $this->db->set('feedback_id', "unhex(replace(uuid(),'-',''))", FALSE);
+        $this->db->set('feedback_id_device', "UNHEX(".$device_id.")", FALSE);
 
 		$this->db->insert('feedback', $data);
 

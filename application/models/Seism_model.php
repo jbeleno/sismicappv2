@@ -39,13 +39,13 @@ class Seism_model extends CI_Model {
     	$logs = array();
     	$data = array();
 
-    	$this->db->select('seism_id, seism_magnitude, seism_magnitude_richter, seism_epicenter, seism_date');
+    	$this->db->select('HEX(seism_id) AS seism_id, seism_magnitude, seism_magnitude_richter, seism_epicenter, seism_date');
     	$this->db->order_by('seism_id', 'desc');
 
     	$seisms_query = $this->db->get('seism', 20, 0);
 
         // Getting the device identifier
-        $this->db->select('device_id');
+        $this->db->select('HEX(device_id) AS device_id');
         $this->db->where('device_token', $device_token);
         $device_query = $this->db->get('device', 1, 0);
         $idDevice = NULL;
@@ -95,14 +95,14 @@ class Seism_model extends CI_Model {
      **/
     public function detail($device_token = NULL, $idSeism = NULL){
         $this->db->select('seism_lat, seism_lng, seism_epicenter, seism_date, seism_depth, seism_magnitude, seism_magnitude_richter');
-        $this->db->where('seism_id', $idSeism);
+        $this->db->where('HEX(seism_id)', $idSeism);
 
         $seism_query = $this->db->get('seism', 1, 0);
 
         if($seism_query->num_rows() == 1){
 
             // Getting the device identifier
-            $this->db->select('device_id');
+            $this->db->select('HEX(device_id) AS device_id');
             $this->db->where('device_token', $device_token);
             $device_query = $this->db->get('device', 1, 0);
             $idDevice = NULL;
@@ -254,6 +254,9 @@ class Seism_model extends CI_Model {
 						'seism_detection_date' => $detection_date
 					);
 
+                    // Handling the UUID as identifier
+                    $this->db->set('seism_id', "unhex(replace(uuid(),'-',''))", FALSE);
+
 			        // Execute the code below as a transaction
 			        $this->db->trans_start();
 
@@ -288,12 +291,12 @@ class Seism_model extends CI_Model {
 
         $html = file_get_html(URL_RSNC_LOCAL);
         $control = 0;
-        $data = array();
         $detectionDate = date("Y-m-d H:i:s");
 
         if (!empty($html)) {
             $seism = array(
                 'seism_notificated' => 0,
+                'seism_country' => 'Colombia',
                 'seism_detection_date' => $detectionDate
             );
 
@@ -335,26 +338,26 @@ class Seism_model extends CI_Model {
                         $n_seisms = $this->db->count_all_results('seism'); 
 
                         // If not exist stack it to data, else break the cycle
-                        if($n_seisms == 0)
-                            $data[] = $seism;
-                        else
+                        if($n_seisms == 0){
+                            // Handling the UUID as identifier
+                            $this->db->set('seism_id', "unhex(replace(uuid(),'-',''))", FALSE);
+                        
+                            $this->db->insert('seism', $seism);
+                        }else{
                             break;
+                        }
 
                         // Re-start the seism information
                         $seism = array(
-                            'seism_notificated' => 'NO',
+                            'seism_notificated' => 0,
                             'seism_country' => 'Colombia',
                             'seism_detection_date' => $detectionDate
                         );
+
+
                     }
                 }
             }
-
-            // Select the optimal way to insert data based on the size of the data
-            if(count($data) == 1)
-                $this->db->insert('seism', $data[0]);
-            else if (count($data) > 1)
-                $this->db->insert_batch('seism', $data);
         }
     }
 
@@ -374,7 +377,7 @@ class Seism_model extends CI_Model {
         $this->load->helper('social');
         $this->load->helper('notifications');
 
-        $this->db->select('seism_id, seism_date, seism_epicenter, seism_depth, seism_magnitude_richter, seism_magnitude, seism_lat, seism_lng');
+        $this->db->select('HEX(seism_id) AS seism_id, seism_date, seism_epicenter, seism_depth, seism_magnitude_richter, seism_magnitude, seism_lat, seism_lng');
         $this->db->where('seism_notificated', 0);
 
         $seism_query = $this->db->get('seism', 5, 0);
@@ -397,7 +400,7 @@ class Seism_model extends CI_Model {
 
                 $devices_query = $this->db->query(
                     'SELECT'.
-                    'device_platform, device_push_id, device_range, ('.
+                    'device_platform, device_push_key, device_range, ('.
                         '6371 * acos ('.
                               'cos ( radians('.$seism->seism_lat.'))'.
                               '* cos( radians( device_lat ) )'.
@@ -425,7 +428,7 @@ class Seism_model extends CI_Model {
                     $tokens = array();
 
                     foreach ($devices_query->result() as $device) {
-                        $tokens[] = $device->device_push_id;
+                        $tokens[] = $device->device_push_key;
                         $counter++;
 
                         if($counter == 1000){
@@ -442,7 +445,7 @@ class Seism_model extends CI_Model {
                     $counter = 0;
                 }
 
-                $this->db->where('seism_id', $seism->seism_id);
+                $this->db->where('HEX(seism_id) AS seism_id', $seism->seism_id);
                 $this->db->limit(1);
                 $this->db->update('seism', array('seism_notificated' => 1));
             }

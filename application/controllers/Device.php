@@ -20,7 +20,7 @@ class Device extends CI_Controller {
 
 	public function add()
 	{
-		$push_id = $this->input->post('push_id');
+		$push_key = $this->input->post('push_key');
 		$latitude = $this->input->post('latitude');
 		$longitude = $this->input->post('longitude');
 		$model = $this->input->post('model');
@@ -29,7 +29,7 @@ class Device extends CI_Controller {
 
 		$this->output
 	         ->set_content_type('application/json')
-	         ->set_output(json_encode($this->device_model->add($push_id, $latitude, $longitude, $model, $platform, $version)));
+	         ->set_output(json_encode($this->device_model->add($push_key, $latitude, $longitude, $model, $platform, $version)));
 	}
 
 	public function load_settings()

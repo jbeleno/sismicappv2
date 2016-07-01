@@ -45,13 +45,17 @@ class Session_model extends CI_Model {
             $data_session['session_lng'] = $data_device['device_lng'] = $longitude;
         }
 
-        $this->db->select('device_id');
+        $this->db->select('HEX(device_id) AS device_id');
         $this->db->where('device_token', $device_token);
         $device_query = $this->db->get('device', 1, 0);
+        $device_id = NULL;
         if($device_query->num_rows() == 1){
             $device_id = $device_query->row()->device_id;
-            $data_session['session_id_device'] = $device_id;
         }
+
+        // Handling the UUID as identifier
+        $this->db->set('session_id', "unhex(replace(uuid(),'-',''))", FALSE);
+        $this->db->set('session_id_device', "UNHEX(".$device_id.")", FALSE);
 
         // New session information
         $this->db->insert('session', $data_session);

@@ -22,7 +22,7 @@ class Device_model extends CI_Model {
      *              device token to keep it secret.
      *
      * Parameters:
-     * - $push_id <String>: it's the token used by Android/iOS to send push notifications
+     * - $push_key <String>: it's the token used by Android/iOS to send push notifications
      * - $latitude <Float>: it's the latitude coordinate of the device
      * - $longitude <Float>: it's the longitude coordinate of the device
      * - $model <String>: it's the device model
@@ -32,12 +32,12 @@ class Device_model extends CI_Model {
      * Return: an array with the request status and the device
      *         identifier
      **/
-    public function add($push_id, $latitude, $longitude, 
+    public function add($push_key, $latitude, $longitude, 
                         $model, $platform, $version){
         $date = date("Y-m-d H:i:s");
         $ip = $this->input->ip_address();
 
-        $this->db->where('device_push_id', $push_id);
+        $this->db->where('device_push_key', $push_key);
         $n_devices = $this->db->count_all_results('my_table');
 
         // If there's more than a device with the same push_id, then
@@ -45,12 +45,12 @@ class Device_model extends CI_Model {
         // and a new device is created with different session token
         if($n_devices > 0){
             $this->db->set('device_notifications', 0);
-            $this->db->where('device_push_id', $push_id);
+            $this->db->where('device_push_key', $push_key);
             $this->db->update('device');
         }
 
         $data = array(
-            'device_push_id' => $push_id,
+            'device_push_key' => $push_key,
             'device_token' => md5(microtime().$ip), // Char(32) format
             'device_lat'=> $latitude,
             'device_lng' => $longitude,
@@ -65,6 +65,9 @@ class Device_model extends CI_Model {
             'device_last_date_login' => $date,
             'device_status' => 1
         );
+
+        // Handling the UUID as identifier
+        $this->db->set('device_id', "unhex(replace(uuid(),'-',''))", FALSE);
 
         $this->db->insert('device', $data);
 
