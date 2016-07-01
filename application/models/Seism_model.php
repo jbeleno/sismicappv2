@@ -94,36 +94,45 @@ class Seism_model extends CI_Model {
      * Return: an array of the seism selected or an error 
      **/
     public function detail($device_token = NULL, $idSeism = NULL){
-        $this->db->select('seism_lat, seism_lng, seism_epicenter, seism_date, seism_depth, seism_magnitude, seism_magnitude_richter');
-        $this->db->where('HEX(seism_id)', $idSeism);
+        
+        if(ctype_alnum($idSeism)){
+        	$this->db->select('seism_lat, seism_lng, seism_epicenter, seism_date, seism_depth, seism_magnitude, seism_magnitude_richter');
+   	        $this->db->where('seism_id', "HEX(".$idSeism.")", FALSE);
 
-        $seism_query = $this->db->get('seism', 1, 0);
+	        $seism_query = $this->db->get('seism', 1, 0);
 
-        if($seism_query->num_rows() == 1){
+	        if($seism_query->num_rows() == 1){
 
-            // Getting the device identifier
-            $this->db->select('HEX(device_id) AS device_id');
-            $this->db->where('device_token', $device_token);
-            $device_query = $this->db->get('device', 1, 0);
-            $idDevice = NULL;
+	            // Getting the device identifier
+	            $this->db->select('HEX(device_id) AS device_id');
+	            $this->db->where('device_token', $device_token);
+	            $device_query = $this->db->get('device', 1, 0);
+	            $idDevice = NULL;
 
-            if($devices_query->num_rows() == 1){
-                $idDevice = $device_query->row()->device_id;
-            }
-            
-            // TO DO: Logistic of saving in database logs
+	            if($devices_query->num_rows() == 1){
+	                $idDevice = $device_query->row()->device_id;
+	            }
+	            
+	            // TO DO: Logistic of saving in database logs
 
-            return  array(
-                        'status' => 'OK',
-                        'seism' => $seism_query->row()
-                    );
-        }else{
-            return  array(
-                        'status' => 'BAD',
-                        'msg' => '¡Ups! al parecer no tenemos datos del sismo que estás buscando'
-                    );
-            );
-        }
+	            return  array(
+	                        'status' => 'OK',
+	                        'seism' => $seism_query->row()
+	                    );
+	        }else{
+	            return  array(
+	                        'status' => 'BAD',
+	                        'msg' => '¡Ups! al parecer no tenemos datos del sismo que estás buscando'
+	                    );
+	            );
+	        }
+	    }else{
+	    	return  array(
+	                        'status' => 'BAD',
+	                        'msg' => '¡Ups! al parecer no tenemos datos del sismo que estás buscando'
+	                    );
+	            	);
+	    }
     }
 
 

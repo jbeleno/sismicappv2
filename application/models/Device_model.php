@@ -40,7 +40,7 @@ class Device_model extends CI_Model {
         $this->db->where('device_push_key', $push_key);
         $n_devices = $this->db->count_all_results('my_table');
 
-        // If there's more than a device with the same push_id, then
+        // If there's more than a device with the same push_key, then
         // the devices with are updated to not receive notifications
         // and a new device is created with different session token
         if($n_devices > 0){
