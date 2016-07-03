@@ -25,16 +25,22 @@ class Session_model extends CI_Model {
      * - $device_token <String>: it's the user token assigned for sismicapp as identifier
      * - $latitude <Float>: it's the latitude coordinate of the device
      * - $longitude <Float>: it's the longitude coordinate of the device
+     * - $city <String>: it's the city name where the device stands
+     * - $region <String>: it's the region name where the device stands
+     * - $country <String>: it's the country name where the device stands
      *
      * Return: an array with the request status
      **/
-    public function add($device_token, $latitude, $longitude){
+    public function add($device_token, $latitude, $longitude, $city, $region, $country){
 
         $date = date("Y-m-d H:i:s");
 
         $data_device = array();
         $data_session = array();
 
+        $data_session['session_city'] = $data_device['device_city'] = $city;
+        $data_session['session_region'] = $data_device['device_region'] = $region;
+        $data_session['session_country'] = $data_device['device_country'] = $country;
         $data_session['session_ip'] = $data_device['device_last_ip'] = $this->input->ip_address();
         $data_session['session_date'] = $data_device['device_last_date_login'] = $date;
         $data_device['device_status'] = 1;

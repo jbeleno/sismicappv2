@@ -23,10 +23,13 @@ class Session extends CI_Controller {
 		$device_token = $this->input->post('device_token');
 		$latitude = $this->input->post('latitude');
 		$longitude = $this->input->post('longitude');
+		$city = $this->input->post('city');
+		$region = $this->input->post('region');
+		$country = $this->input->post('country');
 
 		$this->output
 	         	 ->set_content_type('application/json')
-	         	 ->set_output(json_encode($this->session_model->add($device_token, $latitude, $longitude)));
+	         	 ->set_output(json_encode($this->session_model->add($device_token, $latitude, $longitude, $city, $region, $country)));
 	}
 
 }
