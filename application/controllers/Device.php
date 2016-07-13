@@ -27,7 +27,7 @@ class Device extends CI_Controller {
 
 		$this->output
 	         ->set_content_type('application/json')
-	         ->set_output(json_encode($this->device_model->add($model, $platform, $version, app_version)));
+	         ->set_output(json_encode($this->device_model->add($model, $platform, $version, $app_version)));
 	}
 
 	public function load_settings()

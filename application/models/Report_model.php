@@ -62,8 +62,8 @@ class Report_model extends CI_Model {
 
             // Handling the UUID as identifier
             $this->db->set('report_id', "unhex(replace(uuid(),'-',''))", FALSE);
-            $this->db->set('report_id_seism', "UNHEX(".$seism_id.")", FALSE);
-            $this->db->set('report_id_device', "UNHEX(".$device_id.")", FALSE);
+            $this->db->set('report_id_seism', "UNHEX('".$seism_id."')", FALSE);
+            $this->db->set('report_id_device', "UNHEX('".$device_id."')", FALSE);
 
     		$this->db->insert('report', $data);
 

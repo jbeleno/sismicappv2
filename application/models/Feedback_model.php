@@ -51,7 +51,7 @@ class Feedback_model extends CI_Model {
 
         // Handling the UUID as identifier
         $this->db->set('feedback_id', "unhex(replace(uuid(),'-',''))", FALSE);
-        $this->db->set('feedback_id_device', "UNHEX(".$device_id.")", FALSE);
+        $this->db->set('feedback_id_device', "UNHEX('".$device_id."')", FALSE);
 
 		$this->db->insert('feedback', $data);
 

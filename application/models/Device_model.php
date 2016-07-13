@@ -37,7 +37,7 @@ class Device_model extends CI_Model {
         $data = array(
             'device_token' => md5(microtime().$ip), // Char(32) format
             'device_model' => $model,
-            'device_plataform' => $plataform,
+            'device_platform' => $platform,
             'device_version' => $version,
             'device_date_registration' => $date,
             'device_magnitude' => 4.0,
@@ -108,7 +108,7 @@ class Device_model extends CI_Model {
         $date = date("Y-m-d H:i:s");
 
         $this->db->where('device_push_key', $push_key);
-        $n_devices = $this->db->count_all_results('my_table');
+        $n_devices = $this->db->count_all_results('device');
 
         // If there's more than a device with the same push_key, then
         // the devices with are updated to not receive notifications
@@ -120,7 +120,7 @@ class Device_model extends CI_Model {
             $this->db->update('device');
         }
 
-        $data = array(
+        $data_device = array(
             'device_push_key' => $push_key,
             'device_notifications' => 1,
             'device_status' => 1
@@ -154,7 +154,7 @@ class Device_model extends CI_Model {
     public function updateSettings($device_token, $magnitude, $range, $notifications){
         $date = date("Y-m-d H:i:s");
 
-        $data = array(
+        $data_device = array(
             'device_magnitude' => $magnitude,
             'device_range' => $range,
             'device_notifications' => $notifications

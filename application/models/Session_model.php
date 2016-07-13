@@ -61,7 +61,7 @@ class Session_model extends CI_Model {
 
         // Handling the UUID as identifier
         $this->db->set('session_id', "unhex(replace(uuid(),'-',''))", FALSE);
-        $this->db->set('session_id_device', "UNHEX(".$device_id.")", FALSE);
+        $this->db->set('session_id_device', "UNHEX('".$device_id."')", FALSE);
 
         // New session information
         $this->db->insert('session', $data_session);
