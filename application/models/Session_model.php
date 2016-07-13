@@ -28,16 +28,18 @@ class Session_model extends CI_Model {
      * - $city <String>: it's the city name where the device stands
      * - $region <String>: it's the region name where the device stands
      * - $country <String>: it's the country name where the device stands
+     * - $app_version <String>: it's the app version that the user has
      *
      * Return: an array with the request status
      **/
-    public function add($device_token, $latitude, $longitude, $city, $region, $country){
+    public function add($device_token, $latitude, $longitude, $city, $region, $country, $app_version){
 
         $date = date("Y-m-d H:i:s");
 
         $data_device = array();
         $data_session = array();
 
+        $data_session['session_app_version'] = $data_device['device_app_version'] = $app_version;
         $data_session['session_city'] = $data_device['device_city'] = $city;
         $data_session['session_region'] = $data_device['device_region'] = $region;
         $data_session['session_country'] = $data_device['device_country'] = $country;
