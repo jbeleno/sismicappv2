@@ -39,8 +39,8 @@ class Seism_model extends CI_Model {
     	$logs = array();
     	$data = array();
 
-    	$this->db->select('HEX(seism_id) AS seism_id, seism_magnitude, seism_magnitude_richter, seism_epicenter, seism_date');
-    	$this->db->order_by('seism_id', 'desc');
+    	$this->db->select('HEX(seism_id) AS seism_id, seism_magnitude, seism_magnitude_richter, seism_epicenter, seism_depth, seism_date');
+    	$this->db->order_by('seism_date', 'desc');
 
     	$seisms_query = $this->db->get('seism', 20, 0);
 
@@ -50,17 +50,24 @@ class Seism_model extends CI_Model {
         $device_query = $this->db->get('device', 1, 0);
         $idDevice = NULL;
 
-        if($devices_query->num_rows() == 1){
+        if($device_query->num_rows() == 1){
             $idDevice = $device_query->row()->device_id;
         }
 
     	foreach ($seisms_query->result() as $seism) {
     		$dateAgo = convertDateToXTimeAgo($seism->seism_date);
+    		$magnitude = selectMagnitude($seism->seism_magnitude_richter, $seism->seism_magnitude);
 
-    		$seism->seism_date = $dateAgo;
-    		$seism->seism_type = 'seism';
+    		$post_data = array(
+    			'id' => $seism->seism_id,
+    			'magnitude' => floatval($magnitude[0]),
+    			'epicenter' => $seism->seism_epicenter,
+    			'depth' => $seism->seism_depth.'km',
+    			'time' => $dateAgo,
+    			'type' => 'seism'
+    		);
 
-    		$data[] = $seism;
+    		$data[] = $post_data;
 
     		$logs[] = array(
     			($idDevice != "")? $idDevice : "NA",
@@ -72,7 +79,7 @@ class Seism_model extends CI_Model {
     	}
 
         // TO DO: Logistic of saving in database logs
-    	saveLogArray($logs, 'temp/impressions.txt', $sep = ",");
+    	//saveLogArray($logs, 'temp/impressions.txt', $sep = ",");
 
     	return  array(
         			'status' => 'OK',
@@ -94,10 +101,11 @@ class Seism_model extends CI_Model {
      * Return: an array of the seism selected or an error 
      **/
     public function detail($device_token = NULL, $idSeism = NULL){
+        $this->load->helper('general');
         
         if(ctype_alnum($idSeism)){
         	$this->db->select('seism_lat, seism_lng, seism_epicenter, seism_date, seism_depth, seism_magnitude, seism_magnitude_richter');
-   	        $this->db->where('seism_id', "HEX(".$idSeism.")", FALSE);
+   	        $this->db->where('seism_id', "UNHEX('".$idSeism."')", FALSE);
 
 	        $seism_query = $this->db->get('seism', 1, 0);
 
@@ -109,29 +117,52 @@ class Seism_model extends CI_Model {
 	            $device_query = $this->db->get('device', 1, 0);
 	            $idDevice = NULL;
 
-	            if($devices_query->num_rows() == 1){
+	            if($device_query->num_rows() == 1){
 	                $idDevice = $device_query->row()->device_id;
 	            }
 	            
 	            // TO DO: Logistic of saving in database logs
 
+                $seism = $seism_query->row();
+
+                $hr_day = convertDateToText($seism->seism_date);
+                $magnitud = selectMagnitude($seism->seism_magnitude_richter, $seism->seism_magnitude);
+                $depth_classification = classifySeismDepth($seism->seism_depth);
+                $hour_12_format = convertHourTo12($seism->seism_date);
+
+
+                $text = "Según la Red Sismologica Nacional de Colombia (RSNC), este ".
+                         $hr_day." ocurrió un sismo de magnitud ".$magnitud[0].
+                         " en la escala sismológica de ".$magnitud[1]." de ".
+                         $depth_classification." y epicentro cercano a ".$seism->seism_epicenter.
+                         ". El sismo ocurrió a las ".$hour_12_format." y tuvo profundidad de ".
+                         $seism->seism_depth." km. Esta información es tomada en tiempo real".
+                         " de la plataforma web de la Red Sismologica Nacional de Colombia ".
+                         "(RSNC) y es recolectada y presentada por Sismicapp.";
+
+                $data_seism = array(
+                    'id' => $idSeism,
+                    'latitude' => floatval($seism->seism_lat),
+                    'longitude' => floatval($seism->seism_lng),
+                    'title' => 'Información del sismo',
+                    'text' => $text
+                );
+
 	            return  array(
 	                        'status' => 'OK',
-	                        'seism' => $seism_query->row()
+	                        'seism' => $data_seism
 	                    );
 	        }else{
 	            return  array(
 	                        'status' => 'BAD',
 	                        'msg' => '¡Ups! al parecer no tenemos datos del sismo que estás buscando'
 	                    );
-	            );
 	        }
 	    }else{
 	    	return  array(
 	                        'status' => 'BAD',
 	                        'msg' => '¡Ups! al parecer no tenemos datos del sismo que estás buscando'
 	                    );
-	            	);
 	    }
     }
 

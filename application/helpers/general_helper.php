@@ -43,6 +43,96 @@ if(!function_exists('calculateDistance')){
 	}
 }
 
+/**
+ * Function name: classifySeismDepth
+ *
+ * Description: This function takes the seism depth and classify it as
+ *				"poca profundidad", "profundidad media" or "mucha profundidad"
+ *
+ * Parameters:
+ * -$depth <String>: The seism depth in kilometers
+ *
+ * Return: A classification according to the seism depth
+ **/
+if(!function_exists('classifySeismDepth')){
+	function classifySeismDepth($depth)
+	{
+		$classification = "profundidad indeterminada";
+
+		if($depth < 60){
+			$classification = "poca profundidad";
+		}else if($depth > 60 && $depth < 300){
+			$classification = "profundidad media";
+		}else{
+			$classification = "mucha profundidad";
+		}
+
+		return $classification;
+	}
+}
+
+/**
+ * Function name: convertDateToText
+ *
+ * Description: This function takes a date in the format Y-m-d H:i:s and 
+ *				convert it into a human readable string
+ *
+ * Parameters:
+ * -$str_date <String>: a date in String format
+ *
+ * Return: A text with a human readable representation of the date
+ **/
+if(!function_exists('convertDateToText')){
+	function convertDateToText($str_date)
+	{
+		$days = array(
+			"domingo",
+			"lunes",
+			"martes",
+			"miércoles",
+			"jueves",
+			"viernes",
+			"sábado"
+		);
+
+		$months = array(
+			'enero',
+			'febrero',
+			'marzo',
+			'abril',
+			'mayo',
+			'junio',
+			'julio',
+			'agosto',
+			'septiembre',
+			'octubre',
+			'noviembre',
+			'diciembre'
+		);
+
+		$date = DateTime::createFromFormat('Y-m-d H:i:s', $str_date)->getTimestamp();
+
+		$day_of_the_week = date("w",$date);
+		$hour = date("H",$date);
+		$day = date("d",$date);
+		$month = intval(date("m",$date))-1;
+		$year = date("Y",$date);
+
+		$part_of_the_day = "";
+
+		if($hour >= 0 && $hour < 12){
+			$part_of_the_day = "mañana";
+		}else if($hour >= 12 && $hour < 6){
+			$part_of_the_day = "tarde";
+		}else{
+			$part_of_the_day = "noche";
+		}
+
+		return  $days[$day_of_the_week]." en la ".$part_of_the_day
+				." (".$day." de ".$months[$month]." de ".$year.")";
+	}
+}
+
 
 /**
  * Function name: convertDateToXTimeAgo
@@ -63,9 +153,9 @@ if(!function_exists('convertDateToXTimeAgo'))
 
 		$dateAgo ="Hace unos segundos";
 
-		$date = strtotime($str_fecha);
+		$date = DateTime::createFromFormat('Y-m-d H:i:s', $str_date);
 
-		$seconds = strtotime('now') - $date;
+		$seconds = strtotime('now') - $date->getTimestamp();
 		$minutes = floor($seconds/60);
 		$hours = floor($seconds/60/60);
 		$days = floor($seconds/60/60/24);
@@ -102,5 +192,54 @@ if(!function_exists('convertDateToXTimeAgo'))
 			$dateAgo = 'Hace '.$years.' años';
 		}
 		return $dateAgo;
+	}
+}
+
+
+/**
+ * Function name: convertHourTo12
+ *
+ * Description: This function takes a date and shows the hours in a 
+ *				12 hours format
+ *
+ * Parameters:
+ * -$str_date <String>: a date in String format
+ *
+ * Return: An hour in 12 hours format
+ **/
+if(!function_exists('convertHourTo12')){
+	function convertHourTo12($str_date)
+	{
+		$date = DateTime::createFromFormat('Y-m-d H:i:s', $str_date)->getTimestamp();
+		return date("h:i a",$date);
+	}
+}
+
+
+/**
+ * Function name: selectMagnitude
+ *
+ * Description: This function takes the seism magnitude in richter scale and
+ *				in the moment magnitude scale and selects one to show to the 
+ *				user
+ *
+ * Parameters:
+ * - $mag_richter <Float>: it's the seism magnitude in richter scale
+ * - $mag_mms <Float>: it's the seism magnitude in the moment magnitude scale
+ * -  $limit <Float>: it's the magnitude limit to select one or another scale
+ *
+ * Return: An string with the selected seism magnitude
+ **/
+if(!function_exists('selectMagnitude')){
+	function selectMagnitude($mag_richter, $mag_mms, $limit = 4.0)
+	{
+		$units = 'Richter';
+		$magnitude = $mag_richter;
+		if($mag_richter >= 4.0 && $mag_mms >= 4.0){
+			$magnitude = $mag_mms;
+			$units = 'magnitud de momento';
+		}
+
+		return array($magnitude, $units);
 	}
 }
