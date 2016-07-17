@@ -72,6 +72,25 @@ if(!function_exists('classifySeismDepth')){
 }
 
 /**
+ * Function name: convertDateTimeToDate
+ *
+ * Description: This function takes a datetime value and convert it in
+ *				a date
+ *
+ * Parameters:
+ * -$str_date <String>: a date in String format
+ *
+ * Return: A date
+ **/
+if(!function_exists('convertDateTimeToDate')){
+	function convertDateTimeToDate($str_date)
+	{
+		$date = DateTime::createFromFormat('Y-m-d H:i:s', $str_date)->getTimestamp();
+		return date("d/m/Y",$date);
+	}
+}
+
+/**
  * Function name: convertDateToText
  *
  * Description: This function takes a date in the format Y-m-d H:i:s and 

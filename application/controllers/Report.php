@@ -20,17 +20,16 @@ class Report extends CI_Controller {
 
 	public function add()
 	{
-		$seism_id = $this->input->post('seism_id');
 		$device_token = $this->input->post('device_token');
 		$latitude = $this->input->post('latitude');
 		$longitude = $this->input->post('longitude');
-		$intensity = $this->input->post('intensity');
-		$place = $this->input->post('place');
-		$activity = $this->input->post('activity');
+		$city = $this->input->post('city');
+		$region = $this->input->post('region');
+		$country = $this->input->post('country');
 
 		$this->output
 	         ->set_content_type('application/json')
-	         ->set_output(json_encode($this->report_model->add($seism_id, $device_token, $latitude, $longitude, $intensity, $place, $activity)));
+	         ->set_output(json_encode($this->report_model->add($device_token, $latitude, $longitude, $city, $region, $country)));
 	}
 
 }
