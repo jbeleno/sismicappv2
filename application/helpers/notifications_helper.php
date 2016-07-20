@@ -11,38 +11,43 @@
 
 
 /**
- * Function name: sendAndroidNotification
+ * Function name: sendPushNotification
  *
  * Description: This function takes a message and a list of tokens to send
- *              the message using Google Cloud Messaging.
+ *              the message using Firebase Cloud Messaging.
  *
  * Parameters:
  * - $message <String>: it's an array of data of a message, it frecuently has a 
  *             message and a title as attributes
- * - $tokens <Array>: it's an array of GCM ids stored in our database, it could be
- *            a simple GCM id inside an array
+ * - $tokens <Array>: it's an array of FCM ids stored in our database, it could be
+ *            a simple FCM id inside an array
  *
  * Return: An array with the notification status of each token
  **/
-if(!function_exists('sendAndroidNotification'))
+if(!function_exists('sendPushNotification'))
 {
-    function sendAndroidNotification($message = array(), $tokens = array()){
+    function sendPushNotification($message = array(), $tokens = array(), $auth_key = ""){
 
+        // Android settings
         $message['vibrate'] = "true";
+        $message['sound'] = 1;
+
+        // iOS settings
+        $message['badge'] = "Increment";
         $message['sound'] = 1;
 
         $fields = array(
             'registration_ids'  => $tokens,
-            'data'              => $message
+            'data' => $message
         );
 
         $headers = array(
-            'Authorization: key=' . ANDROID_API_ACCESS_KEY,
+            'Authorization: key=' . $auth_key,
             'Content-Type: application/json'
         );
 
         $ch = curl_init();
-        curl_setopt( $ch,CURLOPT_URL, 'https://android.googleapis.com/gcm/send' );
+        curl_setopt( $ch,CURLOPT_URL, 'https://fcm.googleapis.com/fcm/send' );
         curl_setopt( $ch,CURLOPT_POST, true );
         curl_setopt( $ch,CURLOPT_HTTPHEADER, $headers );
         curl_setopt( $ch,CURLOPT_RETURNTRANSFER, true );

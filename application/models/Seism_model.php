@@ -350,26 +350,30 @@ class Seism_model extends CI_Model {
      * Return: NOTHING
      **/
     public function spreadTheVoice(){
+    	$this->load->helper('general');
         $this->load->helper('social');
         $this->load->helper('notifications');
+
         $this->db->select('HEX(seism_id) AS seism_id, seism_date, seism_epicenter, seism_depth, seism_magnitude_richter, seism_magnitude, seism_lat, seism_lng');
         $this->db->where('seism_notificated', 0);
         $seism_query = $this->db->get('seism', 5, 0);
+
         if($seism_query->num_rows() > 0){
             foreach ($seism_query->result() as $seism) {
+            	// Setting up tweets
                 $date = new DateTime($seism->seism_date);
-                if($seism->seism_magnitude_richter > 3 && $seism->seism_magnitude > 0)
-                    $magnitude = $seism->seism_magnitude.' Mw';
-                else
-                    $magnitude = $seism->seism_magnitude_richter.' Ml';
+                $magnitudeArr = selectMagnitude($seism->seism_magnitude_richter, $seism->seism_magnitude);
+                $magnitude = $magnitudeArr[0]." ".$magnitudeArr[1];
                 $tw_msg = 'Sismo de '.$magnitude.' tuvo lugar hoy a las '.
                           $date->format('h:i a').' con epicentro cercano a '.
                           $seism->seism_epicenter.' y profundidad de '.
-                          $seism->seism_depth.' Km.';
+                          $seism->seism_depth.'km.';
                 writeTweet($tw_msg);
+
+                // Preparing the push notification according to the device location
                 $devices_query = $this->db->query(
                     'SELECT'.
-                    'device_platform, device_push_key, device_range, ('.
+                    'device_id, device_platform, device_push_key, device_range, ('.
                         '6371 * acos ('.
                               'cos ( radians('.$seism->seism_lat.'))'.
                               '* cos( radians( device_lat ) )'.
@@ -380,35 +384,123 @@ class Seism_model extends CI_Model {
                         ') AS distance'.
                     'FROM device'.
                     'WHERE device_notifications = 1'.
+                    'AND device_status = 1'.
                     'AND (magnitud >= '.$seism->seism_magnitude.
                          'OR '.
                          'magnitud >= '.$seism->seism_magnitude_richter.')'.
                     'HAVING distance > device_range'.
                     'ORDER BY distance'
                 );
+
                 if($devices_query->num_rows() > 0){
-                    $message = array(
+
+                	$message = array(
+                    	'view' => 'seism_detail',
+                    	'id' => $seism->seism_id,
                         'title' => 'Sismo Detectado',
                         'message' => 'Magnitud('.$magnitude.') '.$seism->seism_epicenter
                     );
+
                     $counter = 0;
                     $tokens = array();
+                    $device_ids = array();
+                    $notifications = array();
+                    $notification = array(
+                    	'notification_id' => "UNHEX(REPLACE(UUID(),'-',''))",
+                    	'notification_type' => 'seism_detail',
+                    	'notification_content_id' => $seism->seism_id,
+                    	'notification_date' => date("Y-m-d H:i:s")
+                    );
+
                     foreach ($devices_query->result() as $device) {
+
+                    	$device_ids[] = $device->device_id;
                         $tokens[] = $device->device_push_key;
                         $counter++;
+
                         if($counter == 1000){
-                            sendAndroidNotification($message, $tokens);
+                            // Sending the push notification and storing it the result information
+                        	$resultPush = sendPushNotification($message, $tokens, IOS_API_ACCESS_KEY);
+
+                        	// Iterating over the results to save the results in the database
+                        	for ($i = 0; $i < count($resultPush["results"]); $i++) { 
+                        		$notification["notification_device_id"] = $device_ids[i];
+                        		$notification['notification_date'] = date("Y-m-d H:i:s");
+
+                        		// If the result of that push notification has message_id it's because
+                        		// it was sent if not it returns an error
+                        		if($resultPush["results"][i]["message_id"]){
+                        			$notification["notification_status"] = 1;
+                        			$notification["notification_comments"] = json_encode($resultPush["results"][i]);
+                        		}else if($resultPush["results"][i]["error"]){
+                        			$notification["notification_status"] = 1;
+                        			$notification["notification_comments"] = $resultPush["results"][i]["error"];
+
+                        			// If the push notification returns "NotRegistered" is because the
+                        			// app was unistalled in that device and we need to update that
+                        			if($resultPush["results"][i]["error"] == "NotRegistered"){
+
+                        				$device_unistalled = array(
+                        					'device_status' => 0,
+                        					'device_notifications' => 0
+                        				);
+
+                        				// Update with the device where the app was unistalled
+                						$this->db->update('device', $device_unistalled, 'device_id = HEX("'.$device_ids[i].'")');
+                        			}
+                        		}
+
+                        		$notifications[] = $notification;
+
+                        	}
+
+                        	// Re-starting the settings
+                        	$device_ids = array();
                             $tokens = array();
                             $counter = 0;
                         }
                     }
-                    // TO DO: Receive the notification result and verify if the
-                    // 		  notification was sent to update the device status 
-                    sendAndroidNotification($message, $tokens);
-                    $tokens = array();
-                    $counter = 0;
+                    // Sending the push notification and storing it the result information
+                	$resultPush = sendPushNotification($message, $tokens, IOS_API_ACCESS_KEY);
+
+                	// Iterating over the results to save the results in the database
+                	for ($i = 0; $i < count($resultPush["results"]); $i++) { 
+                		$notification["notification_device_id"] = $device_ids[i];
+                		$notification['notification_date'] = date("Y-m-d H:i:s");
+
+                		// If the result of that push notification has message_id it's because
+                		// it was sent if not it returns an error
+                		if($resultPush["results"][i]["message_id"]){
+                			$notification["notification_status"] = 1;
+                			$notification["notification_comments"] = json_encode($resultPush["results"][i]);
+                		}else if($resultPush["results"][i]["error"]){
+                			$notification["notification_status"] = 1;
+                			$notification["notification_comments"] = $resultPush["results"][i]["error"];
+
+                			// If the push notification returns "NotRegistered" is because the
+                			// app was unistalled in that device and we need to update that
+                			if($resultPush["results"][i]["error"] == "NotRegistered"){
+
+                				$device_unistalled = array(
+                					'device_status' => 0,
+                					'device_notifications' => 0
+                				);
+
+                				// Update with the device where the app was unistalled
+                				$this->db->update('device', $device_unistalled, 'device_id = HEX("'.$device_ids[i].'")');
+
+                			}
+                		}
+
+                		$notifications[] = $notification;
+
+                	}
+
+                	// Insert batch with the push notifications result
+                	$this->db->insert_batch('notification', $notifications, FALSE);
                 }
-                $this->db->where('HEX(seism_id) AS seism_id', $seism->seism_id);
+
+                $this->db->where('seism_id', "HEX('".$seism->seism_id."')");
                 $this->db->limit(1);
                 $this->db->update('seism', array('seism_notificated' => 1));
             }
