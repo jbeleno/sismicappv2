@@ -397,7 +397,7 @@ class Seism_model extends CI_Model {
                 	$message = array(
                     	'view' => 'seism_detail',
                     	'id' => $seism->seism_id,
-                        'title' => 'Sismo Detectado',
+                        'title' => 'Sismo detectado',
                         'message' => 'Magnitud('.$magnitude.') '.$seism->seism_epicenter
                     );
 
@@ -409,6 +409,8 @@ class Seism_model extends CI_Model {
                     	'notification_id' => "UNHEX(REPLACE(UUID(),'-',''))",
                     	'notification_type' => 'seism_detail',
                     	'notification_content_id' => $seism->seism_id,
+                        'notification_content' => $message['title'].': '.$message['message'],
+                        'notification_read_status' = 0,
                     	'notification_date' => date("Y-m-d H:i:s")
                     );
 
@@ -446,7 +448,7 @@ class Seism_model extends CI_Model {
                         				);
 
                         				// Update with the device where the app was unistalled
-                						$this->db->update('device', $device_unistalled, 'device_id = HEX("'.$device_ids[i].'")');
+                						$this->db->update('device', $device_unistalled, 'device_id = UNHEX("'.$device_ids[i].'")');
                         			}
                         		}
 
@@ -487,7 +489,7 @@ class Seism_model extends CI_Model {
                 				);
 
                 				// Update with the device where the app was unistalled
-                				$this->db->update('device', $device_unistalled, 'device_id = HEX("'.$device_ids[i].'")');
+                				$this->db->update('device', $device_unistalled, 'device_id = UNHEX("'.$device_ids[i].'")');
 
                 			}
                 		}
@@ -500,7 +502,7 @@ class Seism_model extends CI_Model {
                 	$this->db->insert_batch('notification', $notifications, FALSE);
                 }
 
-                $this->db->where('seism_id', "HEX('".$seism->seism_id."')");
+                $this->db->where('seism_id', "UNHEX('".$seism->seism_id."')", FALSE);
                 $this->db->limit(1);
                 $this->db->update('seism', array('seism_notificated' => 1));
             }
