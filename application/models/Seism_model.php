@@ -410,7 +410,7 @@ class Seism_model extends CI_Model {
                     	'notification_type' => 'seism_detail',
                     	'notification_content_id' => $seism->seism_id,
                         'notification_content' => $message['title'].': '.$message['message'],
-                        'notification_read_status' = 0,
+                        'notification_read_status' => 0,
                     	'notification_date' => date("Y-m-d H:i:s")
                     );
 
