@@ -72,6 +72,7 @@ class Seism_model extends CI_Model {
         			'posts' => $data
         		);
     }
+
     /**
      * Function name: detail
      *
@@ -148,6 +149,7 @@ class Seism_model extends CI_Model {
 	                    );
 	    }
     }
+
     /**
      * Function name: scrapeInternational
      *
@@ -270,6 +272,7 @@ class Seism_model extends CI_Model {
 			}
 		}
     }
+
     /**
      * Function name: scrapeLocal
      *
@@ -338,6 +341,7 @@ class Seism_model extends CI_Model {
             }
         }
     }
+    
     /**
      * Function name: spreadTheVoice
      *
