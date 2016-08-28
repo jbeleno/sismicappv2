@@ -72,16 +72,22 @@ class Device_model extends CI_Model {
      * Return: an array with the request status and settings data
      **/
     public function loadSettings($device_token){
-        $this->db->select('magnitude, range, device_notifications');
+        $this->db->select('device_magnitude, device_range, device_notifications');
         $this->db->where('device_token', $device_token);
         $settings_query = $this->db->get('device', 1, 0);
 
         if($settings_query->num_rows() == 1){
             $settings = $settings_query->row();
 
+            $settings_data = array(
+            	'magnitude' => $settings->device_magnitude,
+            	'range' => $settings->device_range,
+            	'areNotificationsOn' => $settings->device_notifications
+            );
+
             return  array( 
 	                    "status" => "OK",
-	                    "settings" => $settings
+	                    "settings" => $settings_data
 	                );
 
         }
