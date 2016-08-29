@@ -80,8 +80,8 @@ class Device_model extends CI_Model {
             $settings = $settings_query->row();
 
             $settings_data = array(
-            	'magnitude' => $settings->device_magnitude,
-            	'range' => $settings->device_range,
+            	'magnitude' => floatval($settings->device_magnitude),
+            	'range' => floatval($settings->device_range),
             	'areNotificationsOn' => ($settings->device_notifications == 1)? true : false
             );
 
