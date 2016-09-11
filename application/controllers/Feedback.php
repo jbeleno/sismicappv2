@@ -24,10 +24,13 @@ class Feedback extends CI_Controller {
 		$latitude = $this->input->post('latitude');
 		$longitude = $this->input->post('longitude');
 		$msg = $this->input->post('msg');
+		$city = $this->input->post('city');
+		$region = $this->input->post('region');
+		$country = $this->input->post('country');
 
 		$this->output
 	         ->set_content_type('application/json')
-	         ->set_output(json_encode($this->feedback_model->add($device_token, $latitude, $longitude, $msg)));
+	         ->set_output(json_encode($this->feedback_model->add($device_token, $latitude, $longitude, $msg, $city, $region, $country)));
 	}
 
 }

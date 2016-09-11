@@ -26,10 +26,14 @@ class Feedback_model extends CI_Model {
      * - $latitude <Float>: it's the latitude coordinate of the device
      * - $longitude <Float>: it's the longitude coordinate of the device
      * - $msg <String>: it's a message content about the feedback
+     * - $city <String>: it's the city name where the device stands
+     * - $region <String>: it's the region name where the device stands
+     * - $country <String>: it's the country name where the device stands
      *
      * Return: an array with the request status
      **/
-    public function add($device_token, $latitude, $longitude, $msg){
+    public function add($device_token, $latitude, $longitude, $msg, 
+    					$city, $region, $country){
     	$date = date("Y-m-d H:i:s");
 
     	$this->db->select('device_id');
@@ -46,6 +50,9 @@ class Feedback_model extends CI_Model {
 			'feedback_lng' => $longitude,
 			'feedback_msg' => $intensity,
 			'feedback_ip' => $this->input->ip_address(),
+			'feedback_city' => $city,
+            'feedback_region' => $region,
+            'feedback_country' => $country,
 			'feedback_date' => $date
 		);
 
