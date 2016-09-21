@@ -36,19 +36,19 @@ class Feedback_model extends CI_Model {
     					$city, $region, $country){
     	$date = date("Y-m-d H:i:s");
 
-    	$this->db->select('device_id');
+    	$this->db->select('HEX(device_id) AS device_id');
     	$this->db->where('device_token', $device_token);
     	$device_query = $this->db->get('device', 1, 0);
     	$device_id = NULL;
 
-    	if($device_query.num_rows() == 1){
+    	if($device_query->num_rows() == 1){
     		$device_id = $device_query->row()->device_id;
     	}
 
     	$data = array(
 			'feedback_lat'=> $latitude,
 			'feedback_lng' => $longitude,
-			'feedback_msg' => $intensity,
+			'feedback_msg' => $msg,
 			'feedback_ip' => $this->input->ip_address(),
 			'feedback_city' => $city,
             'feedback_region' => $region,
