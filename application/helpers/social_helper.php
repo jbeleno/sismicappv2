@@ -26,7 +26,7 @@ if(!function_exists('writeTweet'))
     function writeTweet($msg = ""){
     	if($msg != ""){
 
-    		require(APPPATH.'third_party/twitter_api_exchange.php')
+    		require(APPPATH.'third_party/twitter_api_exchange.php');
 
     		$settings = array(
 			    'oauth_access_token' => TW_ACCESS_TOKEN,

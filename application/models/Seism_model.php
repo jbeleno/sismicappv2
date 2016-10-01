@@ -364,7 +364,9 @@ class Seism_model extends CI_Model {
 
         if($seism_query->num_rows() > 0){
             foreach ($seism_query->result() as $seism) {
-            	// Setting up tweets
+            	// Setting up tweets(This should be uncommented when the phonegap app
+                //                   becomes obsolete)
+                /*
                 $date = new DateTime($seism->seism_date);
                 $magnitudeArr = selectMagnitude($seism->seism_magnitude_richter, $seism->seism_magnitude);
                 $magnitude = $magnitudeArr[0]." ".$magnitudeArr[1];
@@ -373,11 +375,12 @@ class Seism_model extends CI_Model {
                           $seism->seism_epicenter.' y profundidad de '.
                           $seism->seism_depth.'km.';
                 writeTweet($tw_msg);
+                */
 
                 // Preparing the push notification according to the device location
                 $devices_query = $this->db->query(
-                    'SELECT'.
-                    'device_id, device_platform, device_push_key, device_range, ('.
+                    'SELECT '.
+                    'HEX(device_id) AS device_id, device_platform, device_push_key, device_range, ('.
                         '6371 * acos ('.
                               'cos ( radians('.$seism->seism_lat.'))'.
                               '* cos( radians( device_lat ) )'.
@@ -385,38 +388,40 @@ class Seism_model extends CI_Model {
                               '+ sin ( radians('.$seism->seism_lat.'))'.
                               '* sin( radians( device_lat ) )'.
                             ')'.
-                        ') AS distance'.
-                    'FROM device'.
-                    'WHERE device_notifications = 1'.
-                    'AND device_status = 1'.
-                    'AND (magnitud >= '.$seism->seism_magnitude.
-                         'OR '.
-                         'magnitud >= '.$seism->seism_magnitude_richter.')'.
-                    'HAVING distance > device_range'.
+                        ') AS distance '.
+                    'FROM device '.
+                    'WHERE device_notifications = 1 '.
+                    'AND device_status = 1 '.
+                    'AND (device_magnitude < '.$seism->seism_magnitude.
+                         ' OR '.
+                         'device_magnitude < '.$seism->seism_magnitude_richter.') '.
+                    'HAVING distance < device_range '.
                     'ORDER BY distance'
                 );
 
+                $magnitude = selectMagnitude($seism->seism_magnitude_richter, $seism->seism_magnitude);
+
+                $message = array(
+                    'view' => 'seism_detail',
+                    'id' => $seism->seism_id,
+                    'title' => 'Sismo detectado',
+                    'message' => 'Magnitud('.$magnitude[0].' - '.$magnitude[1].') '.$seism->seism_epicenter
+                );
+
+                $counter = 0;
+                $tokens = array();
+                $device_ids = array();
+                $notifications = array();
+                $notification = array(
+                    'notification_id' => "UNHEX(REPLACE(UUID(),'-',''))",
+                    'notification_type' => '"seism_detail"',
+                    'notification_content_id' => 'UNHEX("'.$seism->seism_id.'")',
+                    'notification_content' => '"'.$message['title'].': '.$message['message'].'"',
+                    'notification_read_status' => 0,
+                    'notification_date' => '"'.date("Y-m-d H:i:s").'"'
+                );
+
                 if($devices_query->num_rows() > 0){
-
-                	$message = array(
-                    	'view' => 'seism_detail',
-                    	'id' => $seism->seism_id,
-                        'title' => 'Sismo detectado',
-                        'message' => 'Magnitud('.$magnitude.') '.$seism->seism_epicenter
-                    );
-
-                    $counter = 0;
-                    $tokens = array();
-                    $device_ids = array();
-                    $notifications = array();
-                    $notification = array(
-                    	'notification_id' => "UNHEX(REPLACE(UUID(),'-',''))",
-                    	'notification_type' => 'seism_detail',
-                    	'notification_content_id' => $seism->seism_id,
-                        'notification_content' => $message['title'].': '.$message['message'],
-                        'notification_read_status' => 0,
-                    	'notification_date' => date("Y-m-d H:i:s")
-                    );
 
                     foreach ($devices_query->result() as $device) {
 
@@ -426,25 +431,24 @@ class Seism_model extends CI_Model {
 
                         if($counter == 1000){
                             // Sending the push notification and storing it the result information
-                        	$resultPush = sendPushNotification($message, $tokens, IOS_API_ACCESS_KEY);
+                        	$resultPush = json_decode(sendPushNotification($message, $tokens, IOS_API_ACCESS_KEY), true);
 
                         	// Iterating over the results to save the results in the database
                         	for ($i = 0; $i < count($resultPush["results"]); $i++) { 
-                        		$notification["notification_device_id"] = $device_ids[i];
-                        		$notification['notification_date'] = date("Y-m-d H:i:s");
+                        		$notification["notification_device_id"] = $device_ids[$i];
+                        		$notification["notification_status"] = 0;
 
                         		// If the result of that push notification has message_id it's because
                         		// it was sent if not it returns an error
-                        		if($resultPush["results"][i]["message_id"]){
+                        		if($resultPush["results"][$i]["message_id"]){
                         			$notification["notification_status"] = 1;
-                        			$notification["notification_comments"] = json_encode($resultPush["results"][i]);
-                        		}else if($resultPush["results"][i]["error"]){
-                        			$notification["notification_status"] = 1;
-                        			$notification["notification_comments"] = $resultPush["results"][i]["error"];
+                        			$notification["notification_comments"] = "'".json_encode($resultPush["results"][$i])."'";
+                        		}else if($resultPush["results"][$i]["error"]){
+                        			$notification["notification_comments"] = "'".$resultPush["results"][$i]["error"]."'";
 
                         			// If the push notification returns "NotRegistered" is because the
                         			// app was unistalled in that device and we need to update that
-                        			if($resultPush["results"][i]["error"] == "NotRegistered"){
+                        			if($resultPush["results"][$i]["error"] == "NotRegistered"){
 
                         				$device_unistalled = array(
                         					'device_status' => 0,
@@ -452,7 +456,7 @@ class Seism_model extends CI_Model {
                         				);
 
                         				// Update with the device where the app was unistalled
-                						$this->db->update('device', $device_unistalled, 'device_id = UNHEX("'.$device_ids[i].'")');
+                						$this->db->update('device', $device_unistalled, 'device_id = UNHEX("'.$device_ids[$i].'")');
                         			}
                         		}
 
@@ -467,25 +471,30 @@ class Seism_model extends CI_Model {
                         }
                     }
                     // Sending the push notification and storing it the result information
-                	$resultPush = sendPushNotification($message, $tokens, IOS_API_ACCESS_KEY);
+                	$resultPush = json_decode(sendPushNotification($message, $tokens, IOS_API_ACCESS_KEY), true);
+
 
                 	// Iterating over the results to save the results in the database
-                	for ($i = 0; $i < count($resultPush["results"]); $i++) { 
-                		$notification["notification_device_id"] = $device_ids[i];
-                		$notification['notification_date'] = date("Y-m-d H:i:s");
+                	for ($i = 0; $i < count($resultPush["results"]); $i++) {
+
+                		$notification["notification_device_id"] = "UNHEX('".$device_ids[$i]."')";
+                		$notification["notification_status"] = 0;
+
+                        log_message('error',json_encode($resultPush["results"]));
+                        log_message('error',json_encode($resultPush["results"][0]));
+                        log_message('error',$resultPush["results"][$i]["message_id"]);
 
                 		// If the result of that push notification has message_id it's because
                 		// it was sent if not it returns an error
-                		if($resultPush["results"][i]["message_id"]){
+                		if($resultPush["results"][$i]["message_id"]){
                 			$notification["notification_status"] = 1;
-                			$notification["notification_comments"] = json_encode($resultPush["results"][i]);
-                		}else if($resultPush["results"][i]["error"]){
-                			$notification["notification_status"] = 1;
-                			$notification["notification_comments"] = $resultPush["results"][i]["error"];
+                			$notification["notification_comments"] = "'".json_encode($resultPush["results"][$i])."'";
+                		}else if($resultPush["results"][$i]["error"]){
+                			$notification["notification_comments"] = "'".$resultPush["results"][$i]["error"]."'";
 
                 			// If the push notification returns "NotRegistered" is because the
                 			// app was unistalled in that device and we need to update that
-                			if($resultPush["results"][i]["error"] == "NotRegistered"){
+                			if($resultPush["results"][$i]["error"] == "NotRegistered"){
 
                 				$device_unistalled = array(
                 					'device_status' => 0,
@@ -493,7 +502,7 @@ class Seism_model extends CI_Model {
                 				);
 
                 				// Update with the device where the app was unistalled
-                				$this->db->update('device', $device_unistalled, 'device_id = UNHEX("'.$device_ids[i].'")');
+                				$this->db->update('device', $device_unistalled, 'device_id = UNHEX("'.$device_ids[$i].'")');
 
                 			}
                 		}
